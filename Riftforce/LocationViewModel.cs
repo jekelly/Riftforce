@@ -20,7 +20,7 @@ namespace Riftforce
 
         public ReactiveCommand<Unit, Unit> Command { get; }
 
-        public LocationViewModel(Location location, GameView game)
+        public LocationViewModel(Location location, GameView game, Game game1)
         {
             this.elementals = new ReadOnlyObservableCollection<Elemental>[2];
             for (int i = 0; i < location.Elementals.Length; i++)
@@ -32,7 +32,9 @@ namespace Riftforce
                     .Subscribe();
             }
 
-            this.Command = ReactiveCommand.Create(() => PlaySelectedElemental(), game.WhenAnyValue(x => x.SelectedElemental, (Elemental e) => e is not null));
+            int index = game1.Locations.IndexOf(location);
+
+            this.Command = ReactiveCommand.Create(() => PlaySelectedElemental(), game.WhenAnyValue(x => x.SelectedElemental, (Elemental e) => e is not null && game1.CanPlay(new PlayElemental() { ElementalId = e.Id, PlayerIndex = 0, LocationIndex = (uint)index })));
 
             Unit PlaySelectedElemental()
             {

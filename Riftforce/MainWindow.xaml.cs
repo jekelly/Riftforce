@@ -46,7 +46,7 @@ namespace Riftforce
                 .Bind(out this.hand)
                 .Subscribe();
 
-            this.locations = game.Locations.Select(l => new LocationViewModel(l, this)).ToArray();
+            this.locations = game.Locations.Select(l => new LocationViewModel(l, this, game)).ToArray();
 
             this.playElementalToLocationCommand = ReactiveCommand.Create<(Location loc, Elemental e), bool>(l =>
             {
@@ -59,7 +59,7 @@ namespace Riftforce
             },
             this.WhenAnyValue(x => x.SelectedElemental, (Elemental e) => e is not null));
         }
-
+        
         public async void PlayElementalToLocation(Location location, Elemental elemental)
         {
             await this.playElementalToLocationCommand.Execute((location, elemental));
