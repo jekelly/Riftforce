@@ -32,7 +32,7 @@ namespace Riftforce
                     .Subscribe();
             }
 
-            this.Command = ReactiveCommand.Create(() => PlaySelectedElemental());
+            this.Command = ReactiveCommand.Create(() => PlaySelectedElemental(), game.WhenAnyValue(x => x.SelectedElemental, (Elemental e) => e is not null));
 
             Unit PlaySelectedElemental()
             {

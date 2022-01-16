@@ -56,7 +56,8 @@ namespace Riftforce
                     LocationIndex = (uint)game.Locations.IndexOf(l.loc),
                     PlayerIndex = 0,
                 });
-            });
+            },
+            this.WhenAnyValue(x => x.SelectedElemental, (Elemental e) => e is not null));
         }
 
         public async void PlayElementalToLocation(Location location, Elemental elemental)
