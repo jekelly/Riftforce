@@ -1,0 +1,27 @@
+﻿<local:LocationViewBase
+             x:Class="Riftforce.LocationView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Riftforce"
+             xmlns:rxui="http://reactiveui.net"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <Grid>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" SharedSizeGroup="TopRow"/>
+                <RowDefinition Height="Auto" SharedSizeGroup="MidRow"/>
+                <RowDefinition Height="*" SharedSizeGroup="BottomRow"/>
+            </Grid.RowDefinitions>
+            <ItemsControl x:Name="Enemy" ItemTemplate="{StaticResource ElementalTemplate}" Grid.Row="0" RenderTransformOrigin="0.5,0.5">
+                <ItemsControl.RenderTransform>
+                    <RotateTransform Angle="180"/>
+                </ItemsControl.RenderTransform>
+            </ItemsControl>
+            <Button x:Name="PlayButton" Height="60" Content="Play Here" Grid.Row="1"/>
+            <ItemsControl x:Name="MyElementals" ItemTemplate="{StaticResource ElementalTemplate}" Grid.Row="2"/>
+        </Grid>
+    </Grid>
+</local:LocationViewBase>

@@ -7,4 +7,10 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="DynamicData" Version="7.4.9" />
+    <PackageReference Include="ReactiveUI" Version="17.1.17" />
+    <PackageReference Include="ReactiveUI.WPF" Version="17.1.17" />
+  </ItemGroup>
+
 </Project>

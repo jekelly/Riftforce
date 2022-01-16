@@ -5,6 +5,8 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using ReactiveUI;
+using Splat;
 
 namespace Riftforce
 {
@@ -13,5 +15,9 @@ namespace Riftforce
     /// </summary>
     public partial class App : Application
     {
+        public App()
+        {
+            Locator.CurrentMutable.Register(() => new LocationView(), typeof(IViewFor<LocationViewModel>));
+        }
     }
 }

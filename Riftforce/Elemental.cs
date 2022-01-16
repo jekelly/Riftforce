@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DynamicData;
 
 namespace Riftforce
 {
@@ -11,6 +12,8 @@ namespace Riftforce
         private static int NextIndex;
         private readonly int index;
         private readonly string name;
+
+        public string Name => this.name;
 
         public Guild(string name)
         {
@@ -51,13 +54,20 @@ namespace Riftforce
 
     public class Location
     {
-        public List<Elemental>[] Elementals { get; }
+        private readonly SourceCache<Elemental, uint>[] elementals;
+        public IObservableCache<Elemental, uint>[] Elementals { get; }
 
         public Location()
         {
-            this.Elementals = new List<Elemental>[2];
-            this.Elementals[0] = new List<Elemental>();
-            this.Elementals[1] = new List<Elemental>();
+            this.elementals = new SourceCache<Elemental, uint>[2];
+            this.elementals[0] = new SourceCache<Elemental, uint>(e => e.Id);
+            this.elementals[1] = new SourceCache<Elemental, uint>(e => e.Id);
+            this.Elementals = this.elementals.Select(e => e.AsObservableCache()).ToArray();
+        }
+
+        public void Add(Elemental elemental, uint side)
+        {
+            this.elementals[side].AddOrUpdate(elemental);
         }
     }
 
@@ -101,14 +111,16 @@ namespace Riftforce
 
     public class Player
     {
-        private Deck<Elemental> elementals;
-        private List<Elemental> hand;
+        private readonly Deck<Elemental> elementals;
+        private readonly SourceCache<Elemental, uint> hand;
+
+        public IObservableCache<Elemental, uint> Hand => this.hand.AsObservableCache();
 
         public Player(List<Elemental> deck)
         {
             this.elementals = new Deck<Elemental>(deck);
             this.elementals.Shuffle();
-            this.hand = new List<Elemental>();
+            this.hand = new SourceCache<Elemental, uint>(e => e.Id);
         }
 
         public Elemental Draw()
@@ -118,7 +130,14 @@ namespace Riftforce
 
         public void DrawToHand()
         {
-            this.hand.Add(this.elementals.Draw());
+            this.hand.AddOrUpdate(this.elementals.Draw());
+        }
+
+        public Elemental PlayFromHand(uint id)
+        {
+            var value = this.hand.Lookup(id).Value;
+            this.hand.RemoveKey(id);
+            return value;
         }
     }
 
@@ -127,6 +146,14 @@ namespace Riftforce
         private readonly uint[] scores;
         private readonly Location[] locations;
         private readonly Player[] players;
+
+        private int activePlayerIndex;
+        private Player ActivePlayer => this.players[this.activePlayerIndex];
+
+        private Type moveType;
+        private uint remainingMoves;
+
+        public Player[] Players => this.players;
 
         public Location[] Locations => this.locations;
 
@@ -140,6 +167,65 @@ namespace Riftforce
                 this.locations[i] = new Location();
             }
         }
+
+        public bool ProcessMove(PlayElemental move)
+        {
+            if (move.PlayerIndex != this.activePlayerIndex)
+            {
+                return false;
+            }
+
+            if (move.LocationIndex > this.locations.Length)
+            {
+                return false;
+            }
+
+            if (!this.ActivePlayer.Hand.Lookup(move.ElementalId).HasValue)
+            {
+                return false;
+            }
+
+            if (moveType is object && !typeof(PlayElemental).IsAssignableFrom(this.moveType))
+            {
+                // TODO: test this
+                return false;
+            }
+
+            // remove from hand
+            var elemental = this.ActivePlayer.PlayFromHand(move.ElementalId);
+            this.locations[move.LocationIndex].Add(elemental, move.PlayerIndex);
+            // update remaining moves and move type
+            this.moveType = typeof(PlayElemental);
+            this.remainingMoves--;
+
+            return true;
+        }
+
+        public bool ProcessMove(ActivateElemental move)
+        {
+            return true;
+        }
+
+        public bool ProcessMove(DrawAndScore move)
+        {
+            return true;
+        }
+    }
+
+    public class PlayElemental
+    {
+        public uint PlayerIndex { get; set; }
+        public uint ElementalId { get; set; }
+        public uint LocationIndex { get; set; }
+    }
+
+    public class ActivateElemental
+    {
+    }
+
+    public class DrawAndScore
+    {
+        public int PlayerIndex { get; set; }
     }
 
     public class GameBuilder
@@ -184,7 +270,7 @@ namespace Riftforce
 
             var game = new Game(new[] { player1, player2 });
 
-            game.Locations[2].Elementals[1].Add(player2.Draw());
+            game.Locations[2].Add(player2.Draw(), 1);
 
             return game;
         }
