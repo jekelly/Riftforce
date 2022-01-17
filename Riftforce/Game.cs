@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Riftforce
 {
@@ -20,6 +21,7 @@ namespace Riftforce
         public Location[] Locations => this.locations;
 
         private readonly List<uint> playedLocations;
+        private readonly List<Elemental> playedElementals;
 
         public Game(Player[] players)
         {
@@ -31,6 +33,7 @@ namespace Riftforce
                 this.locations[i] = new Location();
             }
             this.playedLocations = new List<uint>(3);
+            this.playedElementals = new List<Elemental>(3);
         }
 
         public bool CanPlay(PlayElemental move)
@@ -54,6 +57,18 @@ namespace Riftforce
             {
                 // TODO: test this
                 return false;
+            }
+
+            // check if we can play this elemental
+            if (this.playedElementals is not null)
+            {
+                Elemental elemental = this.players[move.PlayerIndex].Hand.Lookup(move.ElementalId).Value;
+                bool matchesGuild = this.playedElementals.All(e => e.Guild == elemental.Guild);
+                bool matchesStrength = this.playedElementals.All(e => e.Strength == elemental.Strength);
+                if (!matchesGuild && !matchesStrength)
+                {
+                    return false;
+                }
             }
 
             // check if we can legally play here
@@ -97,15 +112,37 @@ namespace Riftforce
             this.moveType = typeof(PlayElemental);
 
             this.playedLocations.Add(move.LocationIndex);
+            this.playedElementals.Add(elemental);
 
             this.remainingMoves--;
 
             return true;
         }
 
+        public bool CanPlay(ActivateElemental move)
+        {
+            // discard must be in hand and match the overall discard
+            // must be legal elemental, played on the board
+            // must match type or power of discarded card
+            // must meet requirements of specific elemental
+            return true;
+        }
+
         public bool ProcessMove(ActivateElemental move)
         {
+            if (!CanPlay(move))
+            {
+                return false;
+            }
+
+            //this.DamageFirstAt(move.TargetLocation, move.TargetPlayer);
+
+
             return true;
+        }
+
+        private void DamageFirstAt(uint targetLocation, uint targetPlayer)
+        {
         }
 
         public bool ProcessMove(DrawAndScore move)
@@ -113,4 +150,16 @@ namespace Riftforce
             return true;
         }
     }
+
+    //class CrystalActivation
+    //{
+    //    public bool CanActivate()
+    //    {
+
+    //    }
+
+    //    public bool Activate(Game game)
+    //    {
+    //    }
+    //}
 }
