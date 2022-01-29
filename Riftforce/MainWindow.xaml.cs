@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Reactive;
 using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,6 +29,9 @@ namespace Riftforce
 
         private readonly LocationViewModel[] locations;
         private readonly ReactiveCommand<(Location loc, Elemental e), bool> playElementalToLocationCommand;
+
+        private readonly ReactiveCommand<Unit, Unit> endTurnCommand;
+        public ReactiveCommand<Unit, Unit> EndTurnCommand => this.endTurnCommand;
 
         public LocationViewModel[] Locations => this.locations;
 
@@ -58,6 +62,11 @@ namespace Riftforce
                 });
             },
             this.WhenAnyValue(x => x.SelectedElemental, (Elemental e) => e is not null));
+
+            this.endTurnCommand = ReactiveCommand.Create(() =>
+            {
+                game.EndTurn();
+            });
         }
         
         public async void PlayElementalToLocation(Location location, Elemental elemental)
@@ -80,6 +89,8 @@ namespace Riftforce
             this.OneWayBind(this.ViewModel, vm => vm.Hand, v => v.Hand.ItemsSource);
             this.OneWayBind(this.ViewModel, vm => vm.Locations, v => v.Locations.ItemsSource);
             this.Bind(this.ViewModel, vm => vm.SelectedElemental, v => v.Hand.SelectedItem);
+
+            this.BindCommand(this.ViewModel, vm => vm.EndTurnCommand, v => v.EndTurn);
 
             this.WhenAnyValue(x => x.Hand.SelectedValue).Subscribe(x => Debug.WriteLine($"{x} is new selected hand item"));
         }

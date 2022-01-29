@@ -9,10 +9,12 @@
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <ItemsControl x:Name="Locations" ItemsPanel="{StaticResource SingleRowUniformGrid}" />
-        <ListBox x:Name="Hand" ItemTemplate="{StaticResource ElementalTemplate}" ItemsPanel="{StaticResource HorizontalStackPanel}" Grid.Row="1"/>
+        <Button x:Name="EndTurn" HorizontalAlignment="Right" Content="End Turn" />
+        <ItemsControl x:Name="Locations" ItemsPanel="{StaticResource SingleRowUniformGrid}" Grid.Row="1"/>
+        <ListBox x:Name="Hand" ItemTemplate="{StaticResource ElementalTemplate}" ItemsPanel="{StaticResource HorizontalStackPanel}" Grid.Row="2"/>
     </Grid>
 </Window>

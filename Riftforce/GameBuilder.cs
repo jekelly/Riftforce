@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Reactive.Linq;
 using System.Collections.Generic;
 
 namespace Riftforce
@@ -44,6 +46,16 @@ namespace Riftforce
             }
 
             var game = new Game(new[] { player1, player2 });
+
+            // rudimentary AI
+            game.UpdateState
+                .Where(x => x.ActivePlayer == player2)
+                .Subscribe(g =>
+                {
+                    g.ProcessMove(new DrawAndScore() { PlayerIndex = 1 });
+                });
+                    
+
 
             game.Locations[2].Add(player2.Draw(), 1);
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Subjects;
 
 namespace Riftforce
 {
@@ -11,7 +12,10 @@ namespace Riftforce
         private readonly Player[] players;
 
         private int activePlayerIndex;
-        private Player ActivePlayer => this.players[this.activePlayerIndex];
+        public Player ActivePlayer => this.players[this.activePlayerIndex];
+
+        private readonly BehaviorSubject<Game> update;
+        public IObservable<Game> UpdateState => this.update;
 
         private Type moveType;
         private uint remainingMoves;
@@ -34,6 +38,8 @@ namespace Riftforce
             }
             this.playedLocations = new List<uint>(3);
             this.playedElementals = new List<Elemental>(3);
+            this.update = new(this);
+            this.remainingMoves = 3;
         }
 
         public bool CanPlay(PlayElemental move)
@@ -115,8 +121,25 @@ namespace Riftforce
             this.playedElementals.Add(elemental);
 
             this.remainingMoves--;
+            this.CheckTurnEnd();
 
             return true;
+        }
+
+        public void EndTurn()
+        {
+            this.remainingMoves = 0;
+            this.CheckTurnEnd();
+        }
+
+        private void CheckTurnEnd()
+        {
+            if (this.remainingMoves <= 0)
+            {
+                this.remainingMoves = 3;
+                this.moveType = null;
+                this.SwitchActivePlayer();
+            }
         }
 
         public bool CanPlay(ActivateElemental move)
@@ -147,7 +170,17 @@ namespace Riftforce
 
         public bool ProcessMove(DrawAndScore move)
         {
+            // TODO: placeholder
+            this.remainingMoves = 0;
+            this.CheckTurnEnd();
+            this.playedElementals.Clear();
             return true;
+        }
+
+        private void SwitchActivePlayer()
+        {
+            this.activePlayerIndex = 1 - this.activePlayerIndex;
+            this.update.OnNext(this);
         }
     }
 
