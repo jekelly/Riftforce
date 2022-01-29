@@ -5,42 +5,76 @@ using DynamicData;
 
 namespace Riftforce
 {
-    public class ElementalProxy
+    public class ElementalInPlay
     {
-        public int Order { get; set; }
-        public Elemental? Elemental { get; set; }
+        public ElementalInPlay(Elemental elemental, int index)
+        {
+            this.Elemental = elemental;
+            this.Index = index;
+        }
+
+        public int Index { get; set; }
+        public uint Id => this.Elemental.Id;
+        public Elemental Elemental { get; set; }
+    }
+
+    public class LocationSide
+    {
+        private readonly SourceCache<ElementalInPlay, uint> cache = new SourceCache<ElementalInPlay, uint>(e => e.Id);
+        private readonly ReadOnlyObservableCollection<ElementalInPlay> cards;
+
+        public ReadOnlyObservableCollection<ElementalInPlay> Cards => this.cards;
+        public int Count => this.cache.Count;
+
+        public LocationSide()
+        {
+            this.cache
+                .Connect()
+                .SortBy(e => e.Index)
+                .Bind(out this.cards)
+                .Subscribe();
+        }
+
+        public ElementalInPlay Play(Elemental elemental)
+        {
+            var eip = new ElementalInPlay(elemental, this.Count);
+            this.cache.AddOrUpdate(eip);
+            return eip;
+        }
+
+        public void Remove(ElementalInPlay elemental)
+        {
+            this.cache.Edit((update) =>
+            {
+                var items = update.Items.Where(x => x.Index > elemental.Index);
+                foreach (var item in items)
+                {
+                    item.Index--;
+                }
+                update.Remove(elemental);
+            });
+        }
     }
 
     public class Location
     {
-        private readonly SourceCache<Elemental, uint>[] elementals;
-        private readonly ReadOnlyObservableCollection<Elemental>[] eList;
-        public ReadOnlyObservableCollection<Elemental>[] Elementals => this.eList;
+        private readonly LocationSide[] sides;
+        private readonly ReadOnlyObservableCollection<ElementalInPlay>[] eList;
+        public ReadOnlyObservableCollection<ElementalInPlay>[] Elementals => this.eList;
 
         public Location()
         {
-            this.elementals = new SourceCache<Elemental, uint>[2];
-            this.elementals[0] = new SourceCache<Elemental, uint>(e => e.Id);
-            this.elementals[1] = new SourceCache<Elemental, uint>(e => e.Id);
-            this.eList = new ReadOnlyObservableCollection<Elemental>[2];
-
-            for (int i = 0; i < 2; i++)
-            {
-                int order = 0;
-                this.elementals[i]
-                    .Connect()
-                    .Transform(e => new ElementalProxy() { Elemental = e, Order = order++ })
-                    .SortBy(x => x.Order)
-                    .Transform(e => e.Elemental)
-                    .Bind(out this.eList[i])
-                    .Subscribe();
-            }
-            //this.Elementals = this.elementals.Select(e => e.AsObservableCache()).ToArray();
+            this.sides = new LocationSide[2];
+            this.sides[0] = new LocationSide();
+            this.sides[1] = new LocationSide();
+            this.eList = new ReadOnlyObservableCollection<ElementalInPlay>[2];
+            this.eList[0] = this.sides[0].Cards;
+            this.eList[1] = this.sides[1].Cards;
         }
 
         public void Add(Elemental elemental, uint side)
         {
-            this.elementals[side].AddOrUpdate(elemental);
+            this.sides[side].Play(elemental);
         }
 
         public void ApplyDamageToFront(uint side)

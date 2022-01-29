@@ -13,8 +13,8 @@ namespace Riftforce
 {
     public class LocationViewModel : ReactiveObject
     {
-        public ReadOnlyObservableCollection<Elemental> ElementalOne { get; }
-        public ReadOnlyObservableCollection<Elemental> ElementalTwo { get; }
+        public ReadOnlyObservableCollection<ElementalInPlay> ElementalOne { get; }
+        public ReadOnlyObservableCollection<ElementalInPlay> ElementalTwo { get; }
 
         public ReactiveCommand<Unit, Unit> Command { get; }
 
