@@ -30,8 +30,8 @@ namespace Riftforce
         private readonly LocationViewModel[] locations;
         private readonly ReactiveCommand<(Location loc, Elemental e), bool> playElementalToLocationCommand;
 
-        private readonly ReactiveCommand<Unit, Unit> endTurnCommand;
-        public ReactiveCommand<Unit, Unit> EndTurnCommand => this.endTurnCommand;
+        public ReactiveCommand<Unit, Unit> EndTurnCommand { get; }
+        public ReactiveCommand<Unit, Unit> CheckAndDrawCommand { get; }
 
         public LocationViewModel[] Locations => this.locations;
 
@@ -63,12 +63,22 @@ namespace Riftforce
             },
             this.WhenAnyValue(x => x.SelectedElemental, (Elemental e) => e is not null));
 
-            this.endTurnCommand = ReactiveCommand.Create(() =>
+            this.EndTurnCommand = ReactiveCommand.Create(() =>
             {
                 game.EndTurn();
             });
+
+            var handSizeChanged = game.ActivePlayer.Hand.CountChanged.Select(x => game.CanPlay(new DrawAndScore() { PlayerIndex = 0 }));
+            var moveTypeChanged = game.MinorUpdate.Select(x => game.CanPlay(new DrawAndScore() { PlayerIndex = 0 }));
+            var composed = Observable.Merge(handSizeChanged, moveTypeChanged);
+
+            this.CheckAndDrawCommand = ReactiveCommand.Create(() =>
+            {
+                game.ProcessMove(new DrawAndScore() { PlayerIndex = 0 });
+            },
+            composed);
         }
-        
+
         public async void PlayElementalToLocation(Location location, Elemental elemental)
         {
             await this.playElementalToLocationCommand.Execute((location, elemental));
@@ -91,6 +101,7 @@ namespace Riftforce
             this.Bind(this.ViewModel, vm => vm.SelectedElemental, v => v.Hand.SelectedItem);
 
             this.BindCommand(this.ViewModel, vm => vm.EndTurnCommand, v => v.EndTurn);
+            this.BindCommand(this.ViewModel, vm => vm.CheckAndDrawCommand, v => v.CheckAndDraw);
 
             this.WhenAnyValue(x => x.Hand.SelectedValue).Subscribe(x => Debug.WriteLine($"{x} is new selected hand item"));
         }

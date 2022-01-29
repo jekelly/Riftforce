@@ -17,6 +17,9 @@ namespace Riftforce
         private readonly BehaviorSubject<Game> update;
         public IObservable<Game> UpdateState => this.update;
 
+        private readonly BehaviorSubject<Game> minorUpdate;
+        public IObservable<Game> MinorUpdate => this.minorUpdate;
+
         private Type moveType;
         private uint remainingMoves;
 
@@ -39,7 +42,13 @@ namespace Riftforce
             this.playedLocations = new List<uint>(3);
             this.playedElementals = new List<Elemental>(3);
             this.update = new(this);
+            this.minorUpdate = new(this);
             this.remainingMoves = 3;
+        }
+
+        public bool CanPlay(DrawAndScore move)
+        {
+            return this.moveType is null && this.players[move.PlayerIndex].Hand.Count < 7;
         }
 
         public bool CanPlay(PlayElemental move)
@@ -138,8 +147,12 @@ namespace Riftforce
             {
                 this.remainingMoves = 3;
                 this.moveType = null;
+                this.playedElementals.Clear();
+                this.playedLocations.Clear();
                 this.SwitchActivePlayer();
             }
+
+            this.minorUpdate.OnNext(this);
         }
 
         public bool CanPlay(ActivateElemental move)
@@ -170,10 +183,15 @@ namespace Riftforce
 
         public bool ProcessMove(DrawAndScore move)
         {
+            var player = this.players[move.PlayerIndex];
+            const int HandSize = 7;
+            while (player.Hand.Count < HandSize)
+            {
+                this.players[move.PlayerIndex].DrawToHand();
+            }
             // TODO: placeholder
             this.remainingMoves = 0;
             this.CheckTurnEnd();
-            this.playedElementals.Clear();
             return true;
         }
 

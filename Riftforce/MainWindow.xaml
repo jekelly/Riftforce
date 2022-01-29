@@ -9,12 +9,15 @@
         Title="MainWindow" Height="450" Width="800">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <Button x:Name="EndTurn" HorizontalAlignment="Right" Content="End Turn" />
-        <ItemsControl x:Name="Locations" ItemsPanel="{StaticResource SingleRowUniformGrid}" Grid.Row="1"/>
+        <ItemsControl x:Name="Locations" ItemsPanel="{StaticResource SingleRowUniformGrid}" Grid.Row="0"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="1">
+            <Button x:Name="CheckAndDraw" Content="Check and draw" />
+            <Button x:Name="EndTurn" Content="End Turn" />
+        </StackPanel>
         <ListBox x:Name="Hand" ItemTemplate="{StaticResource ElementalTemplate}" ItemsPanel="{StaticResource HorizontalStackPanel}" Grid.Row="2"/>
     </Grid>
 </Window>
