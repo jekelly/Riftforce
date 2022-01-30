@@ -32,6 +32,7 @@ namespace Riftforce
 
         public ReactiveCommand<Unit, Unit> EndTurnCommand { get; }
         public ReactiveCommand<Unit, Unit> CheckAndDrawCommand { get; }
+        public ReactiveCommand<Elemental, Unit> DiscardCommand { get; }
 
         public LocationViewModel[] Locations => this.locations;
 
@@ -77,6 +78,12 @@ namespace Riftforce
                 game.ProcessMove(new DrawAndScore() { PlayerIndex = 0 });
             },
             composed);
+
+            this.DiscardCommand = ReactiveCommand.Create((Elemental elemental) =>
+            {
+                game.ProcessMove(new DiscardAction() { DiscardId = elemental.Id });
+            },
+            this.WhenAnyValue(game => game.SelectedElemental, e => e is not null && game.CanPlay(new DiscardAction() { DiscardId = e.Id })));
         }
 
         public async void PlayElementalToLocation(Location location, Elemental elemental)
@@ -102,6 +109,7 @@ namespace Riftforce
 
             this.BindCommand(this.ViewModel, vm => vm.EndTurnCommand, v => v.EndTurn);
             this.BindCommand(this.ViewModel, vm => vm.CheckAndDrawCommand, v => v.CheckAndDraw);
+            this.BindCommand(this.ViewModel, vm => vm.DiscardCommand, v => v.Discard, vm => vm.SelectedElemental);
 
             this.WhenAnyValue(x => x.Hand.SelectedValue).Subscribe(x => Debug.WriteLine($"{x} is new selected hand item"));
         }

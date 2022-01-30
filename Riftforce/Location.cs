@@ -54,6 +54,8 @@ namespace Riftforce
                 update.Remove(elemental);
             });
         }
+
+        public bool Contains(uint elementalId) => this.cache.Lookup(elementalId).HasValue;
     }
 
     public class Location
@@ -79,6 +81,11 @@ namespace Riftforce
 
         public void ApplyDamageToFront(uint side)
         {
+        }
+
+        public bool IsElementalPresent(uint elementalId)
+        {
+            return this.sides.Any(side => side.Contains(elementalId));
         }
     }
 }

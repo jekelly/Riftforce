@@ -16,6 +16,7 @@
         <ItemsControl x:Name="Locations" ItemsPanel="{StaticResource SingleRowUniformGrid}" Grid.Row="0"/>
         <StackPanel Orientation="Horizontal" Grid.Row="1">
             <Button x:Name="CheckAndDraw" Content="Check and draw" />
+            <Button x:Name="Discard" Content="Discard" />
             <Button x:Name="EndTurn" Content="End Turn" />
         </StackPanel>
         <ListBox x:Name="Hand" ItemTemplate="{StaticResource ElementalTemplate}" ItemsPanel="{StaticResource HorizontalStackPanel}" Grid.Row="2"/>

@@ -35,6 +35,11 @@ namespace Riftforce
             }
         }
 
+        public void Disard(T element)
+        {
+            this.discard.Push(element);
+        }
+
         public T Draw()
         {
             return this.draw.Dequeue();

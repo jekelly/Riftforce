@@ -27,11 +27,16 @@ namespace Riftforce
             this.hand.AddOrUpdate(this.elementals.Draw());
         }
 
-        public Elemental PlayFromHand(uint id)
+        public Elemental PullFromHand(uint id)
         {
             var value = this.hand.Lookup(id).Value;
             this.hand.RemoveKey(id);
             return value;
+        }
+
+        public void Discard(Elemental elemental)
+        {
+            this.elementals.Disard(elemental);
         }
     }
 }

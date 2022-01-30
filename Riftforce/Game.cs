@@ -28,7 +28,7 @@ namespace Riftforce
         public Location[] Locations => this.locations;
 
         private readonly List<uint> playedLocations;
-        private readonly List<Elemental> playedElementals;
+        private readonly List<Elemental> usedElementals;
 
         public Game(Player[] players)
         {
@@ -40,7 +40,7 @@ namespace Riftforce
                 this.locations[i] = new Location();
             }
             this.playedLocations = new List<uint>(3);
-            this.playedElementals = new List<Elemental>(3);
+            this.usedElementals = new List<Elemental>(3);
             this.update = new(this);
             this.minorUpdate = new(this);
             this.remainingMoves = 3;
@@ -75,16 +75,7 @@ namespace Riftforce
             }
 
             // check if we can play this elemental
-            if (this.playedElementals is not null)
-            {
-                Elemental elemental = this.players[move.PlayerIndex].Hand.Lookup(move.ElementalId).Value;
-                bool matchesGuild = this.playedElementals.All(e => e.Guild == elemental.Guild);
-                bool matchesStrength = this.playedElementals.All(e => e.Strength == elemental.Strength);
-                if (!matchesGuild && !matchesStrength)
-                {
-                    return false;
-                }
-            }
+            if (!this.MatchesStrengthOrGuild(move.PlayerIndex, move.ElementalId)) return false;
 
             // check if we can legally play here
             if (this.playedLocations is not null)
@@ -121,13 +112,13 @@ namespace Riftforce
             }
 
             // remove from hand
-            var elemental = this.ActivePlayer.PlayFromHand(move.ElementalId);
+            var elemental = this.ActivePlayer.PullFromHand(move.ElementalId);
             this.locations[move.LocationIndex].Add(elemental, move.PlayerIndex);
             // update remaining moves and move type
             this.moveType = typeof(PlayElemental);
 
             this.playedLocations.Add(move.LocationIndex);
-            this.playedElementals.Add(elemental);
+            this.usedElementals.Add(elemental);
 
             this.remainingMoves--;
             this.CheckTurnEnd();
@@ -147,7 +138,8 @@ namespace Riftforce
             {
                 this.remainingMoves = 3;
                 this.moveType = null;
-                this.playedElementals.Clear();
+                this.discard = null;
+                this.usedElementals.Clear();
                 this.playedLocations.Clear();
                 this.SwitchActivePlayer();
             }
@@ -155,12 +147,47 @@ namespace Riftforce
             this.minorUpdate.OnNext(this);
         }
 
+        private Elemental discard;
+        public bool CanPlay(DiscardAction move)
+        {
+            return this.discard is null;
+        }
+
+        public void ProcessMove(DiscardAction move)
+        {
+            this.discard = this.ActivePlayer.PullFromHand(move.DiscardId);
+            this.ActivePlayer.Discard(this.discard);
+        }
+
+        private bool MatchesStrengthOrGuild(uint playerIndex, uint elementalId)
+        {
+            if (this.usedElementals is not null)
+            {
+                Elemental elemental = this.players[playerIndex].Hand.Lookup(elementalId).Value;
+                bool matchesGuild = this.usedElementals.All(e => e.Guild == elemental.Guild);
+                bool matchesStrength = this.usedElementals.All(e => e.Strength == elemental.Strength);
+                if (!matchesGuild && !matchesStrength)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         public bool CanPlay(ActivateElemental move)
         {
-            // discard must be in hand and match the overall discard
-            // must be legal elemental, played on the board
+            // must have a discard
+            if (this.discard is null) return false;
+            // can't use the same elemental twice on a turn
+            if (this.usedElementals.Select(e => e.Id).Contains(move.ElementalId)) return false;
             // must match type or power of discarded card
+            var elemental = this.players[move.PlayerIndex].Hand.Lookup(move.ElementalId);
+            if (!this.MatchesStrengthOrGuild(move.PlayerIndex, move.ElementalId)) return false;
+            // must be legal elemental, played on the board
+            if (!this.locations.Any(l => l.IsElementalPresent(move.ElementalId))) return false;
             // must meet requirements of specific elemental
+            // TODO
             return true;
         }
 
@@ -170,6 +197,8 @@ namespace Riftforce
             {
                 return false;
             }
+
+            
 
             //this.DamageFirstAt(move.TargetLocation, move.TargetPlayer);
 
