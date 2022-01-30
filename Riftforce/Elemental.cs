@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Generic;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Riftforce
@@ -6,6 +7,8 @@ namespace Riftforce
     public class Elemental
     {
         private static uint NextId;
+        private static Dictionary<uint, Elemental> map = new Dictionary<uint, Elemental>();
+
         public uint Id { get; private set; }
         public Guild Guild { get; private set; }
         public uint Strength { get; private set; }
@@ -17,6 +20,10 @@ namespace Riftforce
             this.Guild = guild;
             this.Strength = strength;
             this.Damage = 0;
+
+            map.Add(this.Id, this);
         }
+
+        public static Elemental? Lookup(uint id) => map[id];
     }
 }

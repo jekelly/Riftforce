@@ -6,23 +6,19 @@
              xmlns:local="clr-namespace:Riftforce"
              mc:Ignorable="d" >
     <Button x:Name="Button">
-        <Button.Template>
-            <ControlTemplate TargetType="Button">
-                <Border Width="120" Height="60" Background="Green">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="20"/>
-                            <RowDefinition Height="*"/>
-                        </Grid.RowDefinitions>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="20"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="{Binding Strength}" Grid.Row="1" />
-                        <TextBlock Text="{Binding GuildName}" Grid.Column="1"/>
-                    </Grid>
-                </Border>
-            </ControlTemplate>
-        </Button.Template>
+        <Border Width="120" Height="60" Background="Green">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="20"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="20"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Strength}" Grid.Row="1" />
+                <TextBlock Text="{Binding GuildName}" Grid.Column="1"/>
+            </Grid>
+        </Border>
     </Button>
 </local:ElementalViewModelBase>

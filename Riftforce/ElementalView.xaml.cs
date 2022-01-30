@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reactive.Disposables;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -26,6 +27,11 @@ namespace Riftforce
         public ElementalView()
         {
             InitializeComponent();
+
+            this.WhenActivated((disposal) =>
+            {
+                this.BindCommand(this.ViewModel, vm => vm.ActivateCommand, v => v.Button).DisposeWith(disposal);
+            });
         }
     }
 }

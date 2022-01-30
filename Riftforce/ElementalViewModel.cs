@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Linq;
+using System.Reactive;
+using System.Reactive.Linq;
 using ReactiveUI;
 
 namespace Riftforce
@@ -11,10 +9,18 @@ namespace Riftforce
     {
         public uint Strength { get; }
         public string GuildName { get; }
-        public ElementalViewModel(ElementalInPlay model)
+
+        public ReactiveCommand<Unit, Unit> ActivateCommand { get; }
+
+        public ElementalViewModel(ElementalInPlay model, Game game)
         {
             this.Strength = model.Elemental.Strength;
             this.GuildName = model.Elemental.Guild.Name;
+
+            var activateMove = new ActivateElemental() { PlayerIndex = 0, ElementalId = model.Id };
+            var activate = () => { game.ProcessMove(activateMove); };
+            var canActivate = game.MinorUpdate.Select(g => g.CanPlay(activateMove));
+            this.ActivateCommand = ReactiveCommand.Create(activate, canActivate);
         }
     }
 }

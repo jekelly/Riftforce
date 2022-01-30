@@ -157,13 +157,15 @@ namespace Riftforce
         {
             this.discard = this.ActivePlayer.PullFromHand(move.DiscardId);
             this.ActivePlayer.Discard(this.discard);
+            this.usedElementals.Add(this.discard);
+            this.minorUpdate.OnNext(this);
         }
 
         private bool MatchesStrengthOrGuild(uint playerIndex, uint elementalId)
         {
             if (this.usedElementals is not null)
             {
-                Elemental elemental = this.players[playerIndex].Hand.Lookup(elementalId).Value;
+                Elemental elemental = Elemental.Lookup(elementalId);
                 bool matchesGuild = this.usedElementals.All(e => e.Guild == elemental.Guild);
                 bool matchesStrength = this.usedElementals.All(e => e.Strength == elemental.Strength);
                 if (!matchesGuild && !matchesStrength)

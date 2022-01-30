@@ -29,7 +29,7 @@ namespace Riftforce
             {
                 this.OneWayBind(this.ViewModel, vm => vm.ElementalTwo, v => v.Enemy.ItemsSource).DisposeWith(disposable);
                 this.OneWayBind(this.ViewModel, vm => vm.ElementalOne, v => v.MyElementals.ItemsSource).DisposeWith(disposable);
-                this.BindCommand(this.ViewModel, vm => vm.Command, v => v.PlayButton);
+                this.BindCommand(this.ViewModel, vm => vm.Command, v => v.PlayButton).DisposeWith(disposable);
             });
         }
     }
