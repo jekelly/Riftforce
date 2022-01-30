@@ -27,20 +27,6 @@
             </Border>
         </DataTemplate>
         <DataTemplate x:Key="ElementalInPlayTemplate" DataType="{x:Type local:ElementalInPlay}">
-            <Border Width="120" Height="60" Background="Green">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="20"/>
-                        <RowDefinition Height="*"/>
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="20"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="{Binding Elemental.Strength}" Grid.Row="1" />
-                    <TextBlock Text="{Binding Elemental.Guild.Name}" Grid.Column="1"/>
-                </Grid>
-            </Border>
         </DataTemplate>
     </Application.Resources>
 </Application>

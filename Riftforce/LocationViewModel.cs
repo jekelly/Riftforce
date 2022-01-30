@@ -7,21 +7,33 @@ using System.Reactive.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DynamicData;
+using DynamicData.Operators;
+using DynamicData.Binding;
 using ReactiveUI;
 
 namespace Riftforce
 {
     public class LocationViewModel : ReactiveObject
     {
-        public ReadOnlyObservableCollection<ElementalInPlay> ElementalOne { get; }
-        public ReadOnlyObservableCollection<ElementalInPlay> ElementalTwo { get; }
+        private readonly ReadOnlyObservableCollection<ElementalViewModel> elementalOne;
+        private readonly ReadOnlyObservableCollection<ElementalViewModel> elementalTwo;
+        public ReadOnlyObservableCollection<ElementalViewModel> ElementalOne => this.elementalOne;
+        public ReadOnlyObservableCollection<ElementalViewModel> ElementalTwo => this.elementalTwo;
 
         public ReactiveCommand<Unit, Unit> Command { get; }
 
         public LocationViewModel(Location location, GameView game, Game game1)
         {
-            this.ElementalOne = location.Elementals[0];
-            this.ElementalTwo = location.Elementals[1];
+            location.Elementals[0]
+                .ToObservableChangeSet()
+                .Transform(x => new ElementalViewModel(x))
+                .Bind(out this.elementalOne)
+                .Subscribe();
+            location.Elementals[1]
+                .ToObservableChangeSet()
+                .Transform(x => new ElementalViewModel(x))
+                .Bind(out this.elementalTwo)
+                .Subscribe();
 
             int index = game1.Locations.IndexOf(location);
 
@@ -33,6 +45,5 @@ namespace Riftforce
                 return Unit.Default;
             }
         }
-
     }
 }
