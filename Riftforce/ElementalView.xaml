@@ -15,9 +15,13 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="20"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="30"/>
                 </Grid.ColumnDefinitions>
                 <TextBlock Text="{Binding Strength}" Grid.Row="1" />
                 <TextBlock Text="{Binding GuildName}" Grid.Column="1"/>
+                <UniformGrid Columns="2" Grid.RowSpan="2" Grid.Column="2">
+                    <TextBlock Text="{Binding DamageTaken}"/>
+                </UniformGrid>
             </Grid>
         </Border>
     </Button>

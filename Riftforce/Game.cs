@@ -21,7 +21,6 @@ namespace Riftforce
         public IObservable<Game> MinorUpdate => this.minorUpdate;
 
         private Type moveType;
-        private uint remainingMoves;
 
         public Player[] Players => this.players;
 
@@ -43,7 +42,6 @@ namespace Riftforce
             this.usedElementals = new List<Elemental>(3);
             this.update = new(this);
             this.minorUpdate = new(this);
-            this.remainingMoves = 3;
         }
 
         public bool CanPlay(DrawAndScore move)
@@ -120,7 +118,6 @@ namespace Riftforce
             this.playedLocations.Add(move.LocationIndex);
             this.usedElementals.Add(elemental);
 
-            this.remainingMoves--;
             this.CheckTurnEnd();
 
             return true;
@@ -128,20 +125,24 @@ namespace Riftforce
 
         public void EndTurn()
         {
-            this.remainingMoves = 0;
-            this.CheckTurnEnd();
+            this.CompleteTurn();
+        }
+
+        private void CompleteTurn()
+        {
+            this.moveType = null;
+            this.discard = null;
+            this.usedElementals.Clear();
+            this.playedLocations.Clear();
+            this.SwitchActivePlayer();
         }
 
         private void CheckTurnEnd()
         {
-            if (this.remainingMoves <= 0)
+            int max = this.usedElementals.Contains(this.discard) ? 4 : 3;
+            if (this.usedElementals.Count >= max)
             {
-                this.remainingMoves = 3;
-                this.moveType = null;
-                this.discard = null;
-                this.usedElementals.Clear();
-                this.playedLocations.Clear();
-                this.SwitchActivePlayer();
+                this.CompleteTurn();
             }
 
             this.minorUpdate.OnNext(this);
@@ -200,7 +201,17 @@ namespace Riftforce
                 return false;
             }
 
-            
+            foreach (var location in this.Locations)
+            {
+                if (location.Elementals[move.PlayerIndex].Select(e => e.Id).Contains(move.ElementalId))
+                {
+                    location.ApplyDamageToFront(move.PlayerIndex, 2);
+                    this.usedElementals.Add(Elemental.Lookup(move.ElementalId));
+                    break;
+                }
+            }
+
+            this.CheckTurnEnd();
 
             //this.DamageFirstAt(move.TargetLocation, move.TargetPlayer);
 
@@ -221,8 +232,7 @@ namespace Riftforce
                 this.players[move.PlayerIndex].DrawToHand();
             }
             // TODO: placeholder
-            this.remainingMoves = 0;
-            this.CheckTurnEnd();
+            this.EndTurn();
             return true;
         }
 

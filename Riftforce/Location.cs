@@ -1,21 +1,34 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
+using System.Reactive.Subjects;
 using DynamicData;
 
 namespace Riftforce
 {
     public class ElementalInPlay
     {
+        private uint dmg;
+        private readonly BehaviorSubject<uint> damage;
+
         public ElementalInPlay(Elemental elemental, int index)
         {
             this.Elemental = elemental;
             this.Index = index;
+            this.damage = new BehaviorSubject<uint>(0);
         }
 
         public int Index { get; set; }
         public uint Id => this.Elemental.Id;
         public Elemental Elemental { get; set; }
+        public IObservable<uint> Damage => this.damage;
+
+        public void ApplyDamage(uint damage)
+        {
+            this.dmg += damage;
+            this.damage.OnNext(this.dmg);
+        }
     }
 
     public class LocationSide
@@ -79,8 +92,15 @@ namespace Riftforce
             this.sides[side].Play(elemental);
         }
 
-        public void ApplyDamageToFront(uint side)
+        public void ApplyDamageToFront(uint sourceSide, uint damage)
         {
+            uint side = 1 - sourceSide;
+            var first = sides[side].Cards.Where(c => c.Index == 0).SingleOrDefault();
+            Debug.Assert(first == sides[side].Cards.FirstOrDefault());
+            if (first is not null)
+            {
+                first.ApplyDamage(damage);
+            }
         }
 
         public bool IsElementalPresent(uint elementalId)
