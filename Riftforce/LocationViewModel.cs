@@ -22,7 +22,7 @@ namespace Riftforce
 
         public ReactiveCommand<Unit, Unit> Command { get; }
 
-        public LocationViewModel(Location location, GameView game, Game game1)
+        public LocationViewModel(Location location, GameViewModel game, Game game1)
         {
             location.Elementals[0]
                 .ToObservableChangeSet()

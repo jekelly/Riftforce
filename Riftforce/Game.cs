@@ -11,6 +11,10 @@ namespace Riftforce
         private readonly Location[] locations;
         private readonly Player[] players;
 
+        private int turnCounter = 1;
+        private BehaviorSubject<int> turn;
+        public IObservable<int> Turn => this.turn;
+
         private int activePlayerIndex;
         public Player ActivePlayer => this.players[this.activePlayerIndex];
 
@@ -42,6 +46,7 @@ namespace Riftforce
             this.usedElementals = new List<Elemental>(3);
             this.update = new(this);
             this.minorUpdate = new(this);
+            this.turn = new BehaviorSubject<int>(1);
         }
 
         public bool CanPlay(DrawAndScore move)
@@ -239,6 +244,7 @@ namespace Riftforce
         private void SwitchActivePlayer()
         {
             this.activePlayerIndex = 1 - this.activePlayerIndex;
+            this.turn.OnNext(++this.turnCounter);
             this.update.OnNext(this);
         }
     }
