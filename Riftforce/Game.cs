@@ -208,12 +208,13 @@ namespace Riftforce
                 return false;
             }
 
+            var elemental = Elemental.Lookup(move.ElementalId);
             foreach (var location in this.Locations)
             {
                 if (location.Elementals[move.PlayerIndex].Select(e => e.Id).Contains(move.ElementalId))
                 {
-                    location.ApplyDamageToFront(move.PlayerIndex, 2);
-                    this.usedElementals.Add(Elemental.Lookup(move.ElementalId));
+                    elemental.Guild.Activate(location, elemental, move.PlayerIndex);
+                    this.usedElementals.Add(elemental);
                     break;
                 }
             }

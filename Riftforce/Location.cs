@@ -11,6 +11,7 @@ namespace Riftforce
     {
         private uint dmg;
         private readonly BehaviorSubject<uint> damage;
+        public uint CurrentDamage => this.dmg;
 
         public ElementalInPlay(Elemental elemental, int index)
         {
