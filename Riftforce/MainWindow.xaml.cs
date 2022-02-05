@@ -19,6 +19,8 @@ namespace Riftforce
             var game = new GameBuilder().Build();
             this.ViewModel = new GameViewModel(game);
             this.OneWayBind(this.ViewModel, vm => vm.Turn, v => v.TurnText.Text, v => $"Turn: {v}");
+            this.OneWayBind(this.ViewModel, vm => vm.PlayerOneScore, v => v.PlayerOneScore.Text, v => $"Mine: {v} points");
+            this.OneWayBind(this.ViewModel, vm => vm.PlayerTwoScore, v => v.PlayerTwoScore.Text, v => $"Theirs: {v} points");
             this.OneWayBind(this.ViewModel, vm => vm.Hand, v => v.Hand.ItemsSource);
             this.OneWayBind(this.ViewModel, vm => vm.Locations, v => v.Locations.ItemsSource);
             this.Bind(this.ViewModel, vm => vm.SelectedElemental, v => v.Hand.SelectedItem);

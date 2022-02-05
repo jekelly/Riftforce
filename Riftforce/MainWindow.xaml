@@ -14,7 +14,11 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <TextBlock x:Name="TurnText" Text="{Binding Turn}" Grid.Row="0"/>
+        <StackPanel Orientation="Horizontal" Grid.Row="0">
+            <TextBlock x:Name="TurnText"/>
+            <TextBlock x:Name="PlayerOneScore"/>
+            <TextBlock x:Name="PlayerTwoScore"/>
+        </StackPanel>
         <ItemsControl x:Name="Locations" ItemsPanel="{StaticResource SingleRowUniformGrid}" Grid.Row="1"/>
         <StackPanel Orientation="Horizontal" Grid.Row="2">
             <Button x:Name="CheckAndDraw" Content="Check and draw" />

@@ -23,6 +23,12 @@ namespace Riftforce
         private readonly ObservableAsPropertyHelper<int> turn;
         public int Turn => this.turn.Value;
 
+        private readonly ObservableAsPropertyHelper<uint> playerOneScore;
+        public uint PlayerOneScore => this.playerOneScore.Value;
+
+        private readonly ObservableAsPropertyHelper<uint> playerTwoScore;
+        public uint PlayerTwoScore => this.playerTwoScore.Value;
+
         public LocationViewModel[] Locations => this.locations;
 
         private Elemental? selectedElemental;
@@ -35,6 +41,9 @@ namespace Riftforce
         public GameViewModel(Game game)
         {
             this.turn = game.Turn.ToProperty(this, nameof(Turn));
+
+            this.playerOneScore = game.UpdateState.Select(g => g.Scores[0]).ToProperty(this, nameof(PlayerOneScore));
+            this.playerTwoScore = game.UpdateState.Select(g => g.Scores[1]).ToProperty(this, nameof(PlayerTwoScore));
 
             game.Players[0].Hand
                 .Connect()

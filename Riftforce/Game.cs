@@ -11,6 +11,8 @@ namespace Riftforce
         private readonly Location[] locations;
         private readonly Player[] players;
 
+        public uint[] Scores => this.scores;    
+
         private int turnCounter = 1;
         private BehaviorSubject<int> turn;
         public IObservable<int> Turn => this.turn;
@@ -48,7 +50,7 @@ namespace Riftforce
             this.minorUpdate = new(this);
             this.turn = new BehaviorSubject<int>(1);
         }
-
+        
         public bool CanPlay(DrawAndScore move)
         {
             return this.moveType is null && this.players[move.PlayerIndex].Hand.Count < 7;
@@ -236,6 +238,16 @@ namespace Riftforce
             {
                 this.players[move.PlayerIndex].DrawToHand();
             }
+
+            int other = 1 - move.PlayerIndex;
+            for (int i = 0; i < this.locations.Length; i++)
+            {
+                if (this.locations[i].Elementals[move.PlayerIndex].Any() && !this.locations[i].Elementals[other].Any())
+                {
+                    this.scores[move.PlayerIndex]++;
+                }
+            }
+
             // TODO: placeholder
             this.EndTurn();
             return true;
