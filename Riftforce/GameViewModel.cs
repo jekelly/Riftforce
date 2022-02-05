@@ -11,27 +11,22 @@ namespace Riftforce
     public class GameViewModel : ReactiveObject
     {
         private readonly ReadOnlyObservableCollection<Elemental> hand;
-        public ReadOnlyObservableCollection<Elemental> Hand => this.hand;
-
+        private readonly ObservableAsPropertyHelper<int> turn;
+        private readonly ObservableAsPropertyHelper<uint> playerOneScore;
+        private readonly ObservableAsPropertyHelper<uint> playerTwoScore;
         private readonly LocationViewModel[] locations;
         private readonly ReactiveCommand<(Location loc, Elemental e), bool> playElementalToLocationCommand;
+        private Elemental? selectedElemental;
 
+        public ReadOnlyObservableCollection<Elemental> Hand => this.hand;
         public ReactiveCommand<Unit, Unit> EndTurnCommand { get; }
         public ReactiveCommand<Unit, Unit> CheckAndDrawCommand { get; }
         public ReactiveCommand<Elemental, Unit> DiscardCommand { get; }
-
-        private readonly ObservableAsPropertyHelper<int> turn;
         public int Turn => this.turn.Value;
-
-        private readonly ObservableAsPropertyHelper<uint> playerOneScore;
         public uint PlayerOneScore => this.playerOneScore.Value;
-
-        private readonly ObservableAsPropertyHelper<uint> playerTwoScore;
         public uint PlayerTwoScore => this.playerTwoScore.Value;
-
         public LocationViewModel[] Locations => this.locations;
 
-        private Elemental? selectedElemental;
         public Elemental? SelectedElemental
         {
             get => this.selectedElemental;
@@ -53,6 +48,7 @@ namespace Riftforce
 
             this.locations = game.Locations.Select(l => new LocationViewModel(l, this, game)).ToArray();
 
+            var canPlayElementalToLocation = this.WhenAnyValue(x => x.SelectedElemental, (Elemental? e) => e is not null);
             this.playElementalToLocationCommand = ReactiveCommand.Create<(Location loc, Elemental e), bool>(l =>
             {
                 return game.ProcessMove(new PlayElemental()
@@ -61,8 +57,7 @@ namespace Riftforce
                     LocationIndex = (uint)game.Locations.IndexOf(l.loc),
                     PlayerIndex = 0,
                 });
-            },
-            this.WhenAnyValue(x => x.SelectedElemental, (Elemental e) => e is not null));
+            }, canPlayElementalToLocation);
 
             this.EndTurnCommand = ReactiveCommand.Create(() =>
             {
@@ -71,13 +66,13 @@ namespace Riftforce
 
             var handSizeChanged = game.ActivePlayer.Hand.CountChanged.Select(x => game.CanPlay(new DrawAndScore() { PlayerIndex = 0 }));
             var moveTypeChanged = game.MinorUpdate.Select(x => game.CanPlay(new DrawAndScore() { PlayerIndex = 0 }));
-            var composed = Observable.Merge(handSizeChanged, moveTypeChanged);
+            var canCheckAndDraw = Observable.Merge(handSizeChanged, moveTypeChanged);
 
             this.CheckAndDrawCommand = ReactiveCommand.Create(() =>
             {
                 game.ProcessMove(new DrawAndScore() { PlayerIndex = 0 });
             },
-            composed);
+            canCheckAndDraw);
 
             this.DiscardCommand = ReactiveCommand.Create((Elemental elemental) =>
             {
