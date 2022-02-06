@@ -31,9 +31,10 @@ namespace Riftforce
 
         public static readonly IReadOnlyList<Guild> Guilds = new[] { Fire, Ice, Light, Shadow, Earth, Water, Thunder, Plant, Air, Crystal };
 
-        public virtual void Activate(Location location, Elemental elemental, uint playerIndex)
+        public virtual Phase Activate(Location location, Elemental elemental, uint playerIndex)
         {
             location.ApplyDamageToFront(playerIndex, 2);
+            return Phase.Activate;
         }
     }
 
@@ -41,7 +42,7 @@ namespace Riftforce
     {
         public IceGuild() : base("Ice") { }
 
-        public override void Activate(Location location, Elemental elemental, uint playerIndex)
+        public override Phase Activate(Location location, Elemental elemental, uint playerIndex)
         {
             var enemyIndex = 1 - playerIndex;
             var enemyElementals = location.Elementals[enemyIndex];
@@ -54,6 +55,8 @@ namespace Riftforce
             {
                 lastEnemy.ApplyDamage(1);
             }
+
+            return Phase.Activate;
         }
     }
 
@@ -61,9 +64,10 @@ namespace Riftforce
     {
         public CrystalGuild() : base("Crystal") { }
 
-        public override void Activate(Location location, Elemental elemental, uint playerIndex)
+        public override Phase Activate(Location location, Elemental elemental, uint playerIndex)
         {
             location.ApplyDamageToFront(playerIndex, 4);
+            return Phase.Activate;
         }
     }
 
@@ -71,7 +75,7 @@ namespace Riftforce
     {
         public FireGuild() : base("Fire") { }
 
-        public override void Activate(Location location, Elemental elemental, uint playerIndex)
+        public override Phase Activate(Location location, Elemental elemental, uint playerIndex)
         {
             // 3 damage to front enemy
             location.ApplyDamageToFront(playerIndex, 3);
@@ -83,6 +87,8 @@ namespace Riftforce
                 var allyTarget = location.Elementals[playerIndex][elementalId.Index + 1];
                 allyTarget.ApplyDamage(1);
             }
+
+            return Phase.Activate;
         }
     }
 }

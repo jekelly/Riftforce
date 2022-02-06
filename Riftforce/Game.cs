@@ -5,11 +5,22 @@ using System.Reactive.Subjects;
 
 namespace Riftforce
 {
+    public enum Phase
+    {
+        Main,
+        Deploy,
+        Activate,
+        TargetElemental,
+        TargetLocation
+    }
+
     public class Game
     {
         private readonly uint[] scores;
         private readonly Location[] locations;
         private readonly Player[] players;
+
+        private Phase phase;
 
         public uint[] Scores => this.scores;    
 
@@ -49,15 +60,19 @@ namespace Riftforce
             this.update = new(this);
             this.minorUpdate = new(this);
             this.turn = new BehaviorSubject<int>(1);
+            this.phase = Phase.Main;
         }
         
         public bool CanPlay(DrawAndScore move)
         {
+            if (this.phase != Phase.Main) return false;
             return this.moveType is null && this.players[move.PlayerIndex].Hand.Count < 7;
         }
 
         public bool CanPlay(PlayElemental move)
         {
+            if (this.phase != Phase.Main && this.phase != Phase.Deploy) return false;
+
             if (move.PlayerIndex != this.activePlayerIndex)
             {
                 return false;
@@ -116,6 +131,8 @@ namespace Riftforce
                 return false;
             }
 
+            this.phase = Phase.Deploy;
+
             // remove from hand
             var elemental = this.ActivePlayer.PullFromHand(move.ElementalId);
             this.locations[move.LocationIndex].Add(elemental, move.PlayerIndex);
@@ -137,6 +154,7 @@ namespace Riftforce
 
         private void CompleteTurn()
         {
+            this.phase = Phase.Main;
             this.moveType = null;
             this.discard = null;
             this.usedElementals.Clear();
@@ -158,11 +176,13 @@ namespace Riftforce
         private Elemental discard;
         public bool CanPlay(DiscardAction move)
         {
+            if (this.phase != Phase.Main) return false;
             return this.discard is null;
         }
 
         public void ProcessMove(DiscardAction move)
         {
+            this.phase = Phase.Activate;
             this.discard = this.ActivePlayer.PullFromHand(move.DiscardId);
             this.ActivePlayer.Discard(this.discard);
             this.usedElementals.Add(this.discard);
@@ -185,8 +205,9 @@ namespace Riftforce
             return true;
         }
 
-        public bool CanPlay(ActivateElemental move)
+        public bool CanActivate(ActivateElemental move)
         {
+            if (this.phase != Phase.Activate) return false;
             // must have a discard
             if (this.discard is null) return false;
             // can't use the same elemental twice on a turn
@@ -203,7 +224,7 @@ namespace Riftforce
 
         public bool ProcessMove(ActivateElemental move)
         {
-            if (!CanPlay(move))
+            if (!CanActivate(move))
             {
                 return false;
             }
@@ -213,7 +234,7 @@ namespace Riftforce
             {
                 if (location.Elementals[move.PlayerIndex].Select(e => e.Id).Contains(move.ElementalId))
                 {
-                    elemental.Guild.Activate(location, elemental, move.PlayerIndex);
+                    this.phase = elemental.Guild.Activate(location, elemental, move.PlayerIndex);
                     this.usedElementals.Add(elemental);
                     break;
                 }
@@ -225,10 +246,6 @@ namespace Riftforce
 
 
             return true;
-        }
-
-        private void DamageFirstAt(uint targetLocation, uint targetPlayer)
-        {
         }
 
         public bool ProcessMove(DrawAndScore move)
@@ -256,6 +273,7 @@ namespace Riftforce
 
         private void SwitchActivePlayer()
         {
+            this.phase = Phase.Main;
             this.activePlayerIndex = 1 - this.activePlayerIndex;
             this.turn.OnNext(++this.turnCounter);
             this.update.OnNext(this);

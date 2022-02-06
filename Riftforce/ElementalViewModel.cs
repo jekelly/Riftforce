@@ -24,7 +24,7 @@ namespace Riftforce
 
             var activateMove = new ActivateElemental() { PlayerIndex = 0, ElementalId = model.Id };
             var activate = () => { game.ProcessMove(activateMove); };
-            var canActivate = game.MinorUpdate.Select(g => g.CanPlay(activateMove));
+            var canActivate = game.MinorUpdate.Select(g => g.CanActivate(activateMove));
             this.ActivateCommand = ReactiveCommand.Create(activate, canActivate);
         }
     }
