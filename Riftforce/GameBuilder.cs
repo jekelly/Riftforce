@@ -11,7 +11,7 @@ namespace Riftforce
         {
             // TODO: eventually, draft guilds, for now, random it
             var guilds = new List<Guild>(Guild.Guilds);
-            var random = new Random();
+            var random = new Random(2);
             var decks = new List<Elemental>[2];
             decks[0] = new List<Elemental>();
             decks[1] = new List<Elemental>();

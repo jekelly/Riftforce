@@ -20,9 +20,9 @@ namespace Riftforce
         private readonly Location[] locations;
         private readonly Player[] players;
 
-        private Phase phase;
+        public Phase Phase { get; set; }
 
-        public uint[] Scores => this.scores;    
+        public uint[] Scores => this.scores;
 
         private int turnCounter = 1;
         private BehaviorSubject<int> turn;
@@ -51,27 +51,45 @@ namespace Riftforce
             this.scores = new uint[2];
             this.players = players;
             this.locations = new Location[5];
-            for (int i = 0; i < 5; i++)
+            for (uint i = 0; i < 5; i++)
             {
-                this.locations[i] = new Location();
+                this.locations[i] = new Location(i);
             }
             this.playedLocations = new List<uint>(3);
             this.usedElementals = new List<Elemental>(3);
             this.update = new(this);
             this.minorUpdate = new(this);
             this.turn = new BehaviorSubject<int>(1);
-            this.phase = Phase.Main;
+            this.Phase = Phase.Main;
         }
-        
+
+        public bool CanPlay(TargetLocation location)
+        {
+            if (this.Phase != Phase.TargetLocation) return false;
+            return this.ActiveElemental?.CanTarget(this, location) ?? false;
+        }
+
+        public void ProcessMove(TargetLocation targetLocation)
+        {
+            this.ActiveElemental.Target(this, targetLocation);
+        }
+
         public bool CanPlay(DrawAndScore move)
         {
-            if (this.phase != Phase.Main) return false;
+            if (this.Phase != Phase.Main) return false;
             return this.moveType is null && this.players[move.PlayerIndex].Hand.Count < 7;
+        }
+
+        public bool CanPlay(TargetElemental move)
+        {
+            if (this.Phase != Phase.TargetElemental) return false;
+            if (this.ActiveElemental is null) return false;
+            return this.ActiveElemental.CanTarget(this, move);
         }
 
         public bool CanPlay(PlayElemental move)
         {
-            if (this.phase != Phase.Main && this.phase != Phase.Deploy) return false;
+            if (this.Phase != Phase.Main && this.Phase != Phase.Deploy) return false;
 
             if (move.PlayerIndex != this.activePlayerIndex)
             {
@@ -131,7 +149,7 @@ namespace Riftforce
                 return false;
             }
 
-            this.phase = Phase.Deploy;
+            this.Phase = Phase.Deploy;
 
             // remove from hand
             var elemental = this.ActivePlayer.PullFromHand(move.ElementalId);
@@ -154,7 +172,7 @@ namespace Riftforce
 
         private void CompleteTurn()
         {
-            this.phase = Phase.Main;
+            this.Phase = Phase.Main;
             this.moveType = null;
             this.discard = null;
             this.usedElementals.Clear();
@@ -176,13 +194,13 @@ namespace Riftforce
         private Elemental discard;
         public bool CanPlay(DiscardAction move)
         {
-            if (this.phase != Phase.Main) return false;
+            if (this.Phase != Phase.Main) return false;
             return this.discard is null;
         }
 
         public void ProcessMove(DiscardAction move)
         {
-            this.phase = Phase.Activate;
+            this.Phase = Phase.Activate;
             this.discard = this.ActivePlayer.PullFromHand(move.DiscardId);
             this.ActivePlayer.Discard(this.discard);
             this.usedElementals.Add(this.discard);
@@ -205,9 +223,11 @@ namespace Riftforce
             return true;
         }
 
+        public ElementalInPlay? ActiveElemental { get; private set; }
+
         public bool CanActivate(ActivateElemental move)
         {
-            if (this.phase != Phase.Activate) return false;
+            if (this.Phase != Phase.Activate) return false;
             // must have a discard
             if (this.discard is null) return false;
             // can't use the same elemental twice on a turn
@@ -229,16 +249,20 @@ namespace Riftforce
                 return false;
             }
 
-            var elemental = Elemental.Lookup(move.ElementalId);
             foreach (var location in this.Locations)
             {
-                if (location.Elementals[move.PlayerIndex].Select(e => e.Id).Contains(move.ElementalId))
+                // setting a breakpoint - observe lag
+                var elemental = location.Elementals[move.PlayerIndex].SingleOrDefault(e => e.Id == move.ElementalId);
+                if (elemental is not null)
                 {
-                    this.phase = elemental.Guild.Activate(location, elemental, move.PlayerIndex);
-                    this.usedElementals.Add(elemental);
+                    this.Phase = elemental.Elemental.Guild.Activate(location, elemental.Elemental, move.PlayerIndex);
+                    this.usedElementals.Add(elemental.Elemental);
+                    this.ActiveElemental = elemental;
                     break;
                 }
             }
+
+            this.minorUpdate.OnNext(this);
 
             this.CheckTurnEnd();
 
@@ -273,7 +297,7 @@ namespace Riftforce
 
         private void SwitchActivePlayer()
         {
-            this.phase = Phase.Main;
+            this.Phase = Phase.Main;
             this.activePlayerIndex = 1 - this.activePlayerIndex;
             this.turn.OnNext(++this.turnCounter);
             this.update.OnNext(this);

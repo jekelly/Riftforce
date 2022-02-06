@@ -1,13 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Input;
 using DynamicData;
-using DynamicData.Operators;
 using DynamicData.Binding;
 using ReactiveUI;
 
@@ -20,7 +17,7 @@ namespace Riftforce
         public ReadOnlyObservableCollection<ElementalViewModel> ElementalOne => this.elementalOne;
         public ReadOnlyObservableCollection<ElementalViewModel> ElementalTwo => this.elementalTwo;
 
-        public ReactiveCommand<Unit, Unit> Command { get; }
+        public ICommand Command { get; }
 
         public LocationViewModel(Location location, GameViewModel game, Game game1)
         {
@@ -37,7 +34,29 @@ namespace Riftforce
 
             int index = game1.Locations.IndexOf(location);
 
-            this.Command = ReactiveCommand.Create(() => PlaySelectedElemental(), game.WhenAnyValue(x => x.SelectedElemental, (Elemental e) => e is not null && game1.CanPlay(new PlayElemental() { ElementalId = e.Id, PlayerIndex = 0, LocationIndex = (uint)index })));
+            var canDeployTo = game.WhenAnyValue(x => x.SelectedElemental, (Elemental e) => e is not null && game1.CanPlay(new PlayElemental() { ElementalId = e.Id, PlayerIndex = 0, LocationIndex = (uint)index }));
+            var deployCommand = ReactiveCommand.Create(() => PlaySelectedElemental(), canDeployTo);
+
+            var targetLocation = new TargetLocation() { LocationIndex = location.Index };
+            var canTarget = game1.MinorUpdate.Select(x => x.CanPlay(targetLocation)).StartWith(false);
+            var target = () => game1.ProcessMove(targetLocation);
+            var targetCommand = ReactiveCommand.Create(target, canTarget);
+
+            var eFunc = () =>
+            {
+                if (game1.CanPlay(targetLocation))
+                {
+                    game1.ProcessMove(targetLocation);
+                }
+                else
+                {
+                    PlaySelectedElemental();
+                }
+            };
+
+            var either = canDeployTo.Merge(canTarget);
+
+            this.Command = ReactiveCommand.Create(eFunc, either);
 
             Unit PlaySelectedElemental()
             {

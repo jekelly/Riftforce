@@ -13,13 +13,15 @@ namespace Riftforce
         private readonly BehaviorSubject<uint> damage;
         public uint CurrentDamage => this.dmg;
 
-        public ElementalInPlay(Elemental elemental, int index)
+        public ElementalInPlay(Elemental elemental, uint locationIndex, int index)
         {
             this.Elemental = elemental;
+            this.Location = locationIndex;
             this.Index = index;
             this.damage = new BehaviorSubject<uint>(0);
         }
 
+        public uint Location { get; set; }
         public int Index { get; set; }
         public uint Id => this.Elemental.Id;
         public Elemental Elemental { get; set; }
@@ -30,6 +32,11 @@ namespace Riftforce
             this.dmg += damage;
             this.damage.OnNext(this.dmg);
         }
+
+        public bool CanTarget(Game game, TargetElemental move) => this.Elemental.Guild.CanTarget(game, move);
+        public bool CanTarget(Game game, TargetLocation move) => this.Elemental.Guild.CanTarget(game, move);
+
+        public void Target(Game game, TargetLocation move) => this.Elemental.Guild.Target(game, move);
     }
 
     public class LocationSide
@@ -39,9 +46,11 @@ namespace Riftforce
 
         public ReadOnlyObservableCollection<ElementalInPlay> Cards => this.cards;
         public int Count => this.cache.Count;
+        private readonly uint index;
 
-        public LocationSide()
+        public LocationSide(uint index)
         {
+            this.index = index;
             this.cache
                 .Connect()
                 .SortBy(e => e.Index)
@@ -51,9 +60,16 @@ namespace Riftforce
 
         public ElementalInPlay Play(Elemental elemental)
         {
-            var eip = new ElementalInPlay(elemental, this.Count);
+            var eip = new ElementalInPlay(elemental, index, this.Count);
             this.cache.AddOrUpdate(eip);
             return eip;
+        }
+
+        public void Move(ElementalInPlay elemental)
+        {
+            elemental.Location = this.index;
+            elemental.Index = this.Count;
+            this.cache.AddOrUpdate(elemental);
         }
 
         public void Remove(ElementalInPlay elemental)
@@ -78,11 +94,14 @@ namespace Riftforce
         private readonly ReadOnlyObservableCollection<ElementalInPlay>[] eList;
         public ReadOnlyObservableCollection<ElementalInPlay>[] Elementals => this.eList;
 
-        public Location()
+        public uint Index { get; }
+
+        public Location(uint index)
         {
+            this.Index = index;
             this.sides = new LocationSide[2];
-            this.sides[0] = new LocationSide();
-            this.sides[1] = new LocationSide();
+            this.sides[0] = new LocationSide(index);
+            this.sides[1] = new LocationSide(index);
             this.eList = new ReadOnlyObservableCollection<ElementalInPlay>[2];
             this.eList[0] = this.sides[0].Cards;
             this.eList[1] = this.sides[1].Cards;
@@ -92,6 +111,9 @@ namespace Riftforce
         {
             this.sides[side].Play(elemental);
         }
+
+        public void Remove(ElementalInPlay elemental, uint side) => this.sides[side].Remove(elemental);
+        public void Move(ElementalInPlay elemental, uint side) => this.sides[side].Move(elemental);
 
         public void ApplyDamageToFront(uint sourceSide, uint damage)
         {
@@ -107,6 +129,11 @@ namespace Riftforce
         public bool IsElementalPresent(uint elementalId)
         {
             return this.sides.Any(side => side.Contains(elementalId));
+        }
+
+        internal void ApplyDamageToFront(object playerIndex)
+        {
+            throw new NotImplementedException();
         }
     }
 }
