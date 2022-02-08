@@ -15,7 +15,7 @@ namespace Riftforce
 
         public ReactiveCommand<Unit, Unit> ActivateCommand { get; }
 
-        public ElementalViewModel(ElementalInPlay model, Game game)
+        public ElementalViewModel(ElementalInPlay model, Game game, uint side)
         {
             this.Strength = model.Elemental.Strength;
             this.GuildName = model.Elemental.Guild.Name;
@@ -25,7 +25,26 @@ namespace Riftforce
             var activateMove = new ActivateElemental() { PlayerIndex = 0, ElementalId = model.Id };
             var activate = () => { game.ProcessMove(activateMove); };
             var canActivate = game.MinorUpdate.Select(g => g.CanActivate(activateMove));
-            this.ActivateCommand = ReactiveCommand.Create(activate, canActivate);
+
+            var targetElemental = new TargetElemental() { ElementalId = model.Id, PlayerIndex = side };
+            var canTarget = game.MinorUpdate.Select(g => g.CanPlay(targetElemental));
+            var target = () => { game.ProcessMove(targetElemental); };
+
+            var mergedCommand = () =>
+            {
+                if (game.CanActivate(activateMove))
+                {
+                    activate();
+                }
+                else if (game.CanPlay(targetElemental))
+                {
+                    target();
+                }
+            };
+            // TODO order matters here and it shouldn't...
+            var mergedCanExecute = game.MinorUpdate.Select(g => g.CanPlay(targetElemental) || g.CanActivate(activateMove));
+
+            this.ActivateCommand = ReactiveCommand.Create(mergedCommand, mergedCanExecute);
         }
     }
 }

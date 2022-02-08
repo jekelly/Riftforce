@@ -33,10 +33,17 @@ namespace Riftforce
             this.damage.OnNext(this.dmg);
         }
 
+        public void ApplyHealing(uint healing)
+        {
+            this.dmg -= healing;
+            this.damage.OnNext(this.dmg);
+        }
+
         public bool CanTarget(Game game, TargetElemental move) => this.Elemental.Guild.CanTarget(game, move);
         public bool CanTarget(Game game, TargetLocation move) => this.Elemental.Guild.CanTarget(game, move);
 
-        public void Target(Game game, TargetLocation move) => this.Elemental.Guild.Target(game, move);
+        public Phase Target(Game game, TargetLocation move) => this.Elemental.Guild.Target(game, move);
+        public Phase Target(Game game, TargetElemental move) => this.Elemental.Guild.Target(game, move);
     }
 
     public class LocationSide
@@ -129,11 +136,6 @@ namespace Riftforce
         public bool IsElementalPresent(uint elementalId)
         {
             return this.sides.Any(side => side.Contains(elementalId));
-        }
-
-        internal void ApplyDamageToFront(object playerIndex)
-        {
-            throw new NotImplementedException();
         }
     }
 }

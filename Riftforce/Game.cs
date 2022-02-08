@@ -16,6 +16,11 @@ namespace Riftforce
 
     public class Game
     {
+        public ElementalInPlay? FindElemental(uint id, uint side)
+        {
+            return this.Locations.SelectMany(location => location.Elementals[side].Where(eip => eip.Id == id)).SingleOrDefault();
+        }
+
         private readonly uint[] scores;
         private readonly Location[] locations;
         private readonly Player[] players;
@@ -69,9 +74,16 @@ namespace Riftforce
             return this.ActiveElemental?.CanTarget(this, location) ?? false;
         }
 
+        public void ProcessMove(TargetElemental targetElemental)
+        {
+            this.Phase = this.ActiveElemental.Target(this, targetElemental);
+            this.minorUpdate.OnNext(this);
+        }
+
         public void ProcessMove(TargetLocation targetLocation)
         {
-            this.ActiveElemental.Target(this, targetLocation);
+            this.Phase = this.ActiveElemental.Target(this, targetLocation);
+            this.minorUpdate.OnNext(this);
         }
 
         public bool CanPlay(DrawAndScore move)
@@ -175,6 +187,7 @@ namespace Riftforce
             this.Phase = Phase.Main;
             this.moveType = null;
             this.discard = null;
+            this.ActiveElemental = null;
             this.usedElementals.Clear();
             this.playedLocations.Clear();
             this.SwitchActivePlayer();
@@ -224,6 +237,7 @@ namespace Riftforce
         }
 
         public ElementalInPlay? ActiveElemental { get; private set; }
+        public bool HasUsedLightningThisTurn { get; set; }
 
         public bool CanActivate(ActivateElemental move)
         {

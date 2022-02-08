@@ -23,12 +23,12 @@ namespace Riftforce
         {
             location.Elementals[0]
                 .ToObservableChangeSet()
-                .Transform(x => new ElementalViewModel(x, game1))
+                .Transform(x => new ElementalViewModel(x, game1, 0))
                 .Bind(out this.elementalOne)
                 .Subscribe();
             location.Elementals[1]
                 .ToObservableChangeSet()
-                .Transform(x => new ElementalViewModel(x, game1))
+                .Transform(x => new ElementalViewModel(x, game1, 1))
                 .Bind(out this.elementalTwo)
                 .Subscribe();
 
