@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:Riftforce"
              mc:Ignorable="d" >
     <Button x:Name="Button">
-        <Border Width="120" Height="60" Background="Green">
+        <Border Width="120" Height="60" Background="PaleGoldenrod">
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="20"/>
@@ -17,8 +17,8 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="30"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Strength}" Grid.Row="1" />
-                <TextBlock Text="{Binding GuildName}" Grid.Column="1"/>
+                <TextBlock Text="{Binding Strength}" Grid.Row="1" FontSize="36" />
+                <TextBlock Text="{Binding GuildName}" Grid.Column="1" FontSize="18"/>
                 <UniformGrid Columns="2" Grid.RowSpan="2" Grid.Column="2">
                     <TextBlock Text="{Binding DamageTaken}"/>
                 </UniformGrid>
