@@ -35,6 +35,7 @@ namespace Riftforce
 
         public void ApplyHealing(uint healing)
         {
+            healing = Math.Min(healing, this.dmg);
             this.dmg -= healing;
             this.damage.OnNext(this.dmg);
         }
