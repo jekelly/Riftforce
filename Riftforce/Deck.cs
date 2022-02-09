@@ -5,7 +5,7 @@ namespace Riftforce
 {
     public class Deck<T>
     {
-        private static readonly Random r = new Random(0);
+        private static readonly Random r = new Random();
         private readonly IReadOnlyList<T> deck;
         private readonly Queue<T> draw;
         private readonly Stack<T> discard;

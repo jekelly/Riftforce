@@ -192,7 +192,7 @@ namespace Riftforce
         public static readonly Guild Ice = new IceGuild();
         public static readonly Guild Light = new LightGuild();
         public static readonly Guild Shadow = new ShadowGuild();
-        public static readonly Guild Earth = new Guild("Earth");
+        public static readonly Guild Earth = new EarthGuild();
         public static readonly Guild Water = new WaterGuild();
         public static readonly Guild Thunder = new LightningGuild();
         public static readonly Guild Plant = new PlantGuild();
@@ -213,6 +213,24 @@ namespace Riftforce
             location.ApplyDamageToFront(playerIndex, 2);
             return Phase.Activate;
         }
+
+        public virtual void OnPlayed(Location location, uint playerIndex)
+        {
+        }
+    }
+
+    public class EarthGuild : Guild
+    {
+        public EarthGuild() : base("Earth") { }
+
+        public override void OnPlayed(Location location, uint playerIndex)
+        {
+            foreach (var opponent in location.Elementals[1 - playerIndex])
+            {
+                opponent.ApplyDamage(1);
+            }
+        }
+
     }
 
     public class PlantGuild : Guild

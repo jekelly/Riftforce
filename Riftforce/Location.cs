@@ -114,9 +114,9 @@ namespace Riftforce
             this.eList[1] = this.sides[1].Cards;
         }
 
-        public void Add(Elemental elemental, uint side)
+        public ElementalInPlay Add(Elemental elemental, uint side)
         {
-            this.sides[side].Play(elemental);
+            return this.sides[side].Play(elemental);
         }
 
         public void Remove(ElementalInPlay elemental, uint side) => this.sides[side].Remove(elemental);

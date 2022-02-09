@@ -165,7 +165,10 @@ namespace Riftforce
 
             // remove from hand
             var elemental = this.ActivePlayer.PullFromHand(move.ElementalId);
-            this.locations[move.LocationIndex].Add(elemental, move.PlayerIndex);
+            var eip = this.locations[move.LocationIndex].Add(elemental, move.PlayerIndex);
+
+            eip.Elemental.Guild.OnPlayed(this.locations[move.LocationIndex], move.PlayerIndex);
+
             // update remaining moves and move type
             this.moveType = typeof(PlayElemental);
 
