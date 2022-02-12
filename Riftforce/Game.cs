@@ -5,15 +5,6 @@ using System.Reactive.Subjects;
 
 namespace Riftforce
 {
-    public enum Phase
-    {
-        Main,
-        Deploy,
-        Activate,
-        TargetElemental,
-        TargetLocation
-    }
-
     public class Game
     {
         public ElementalInPlay? FindElemental(uint id, uint side)
