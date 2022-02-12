@@ -162,7 +162,7 @@ namespace Riftforce
         {
             var elemental = game.FindElemental(move.ElementalId, move.PlayerIndex);
             bool willKillTarget = (elemental.Elemental.Strength - elemental.CurrentDamage - 2) >= 0;
-            elemental.ApplyDamage(2);
+            game.Locations[elemental.Location].ApplyDamageToSpecificIndex(move.PlayerIndex, elemental.Index, 2);
             if (willKillTarget && !game.HasUsedLightningThisTurn)
             {
                 game.HasUsedLightningThisTurn = true;
@@ -225,12 +225,8 @@ namespace Riftforce
 
         public override void OnPlayed(Location location, uint playerIndex)
         {
-            foreach (var opponent in location.Elementals[1 - playerIndex])
-            {
-                opponent.ApplyDamage(1);
-            }
+            location.ApplyDamageToAll(1 - playerIndex, 1);
         }
-
     }
 
     public class PlantGuild : Guild
@@ -273,14 +269,8 @@ namespace Riftforce
             var lastEnemy = enemyElementals.LastOrDefault();
             if (lastEnemy is not null)
             {
-                if (lastEnemy.CurrentDamage > 0)
-                {
-                    lastEnemy.ApplyDamage(4);
-                }
-                else
-                {
-                    lastEnemy.ApplyDamage(1);
-                }
+                uint damage = lastEnemy.CurrentDamage > 0 ? 4u : 1u;
+                location.ApplyDamageToSpecificIndex(1 - playerIndex, lastEnemy.Index, damage);
             }
 
             return Phase.Activate;
@@ -311,8 +301,7 @@ namespace Riftforce
             var elementalId = playerElementals.Select((eip, i) => new { Index = i, Id = eip.Id }).Single(a => a.Id == elemental.Id);
             if (elementalId.Index < playerElementals.Count - 1)
             {
-                var allyTarget = location.Elementals[playerIndex][elementalId.Index + 1];
-                allyTarget.ApplyDamage(1);
+                location.ApplyDamageToSpecificIndex(playerIndex, elementalId.Index + 1, 1);
             }
 
             return Phase.Activate;

@@ -11,7 +11,18 @@ namespace Riftforce
     {
         private uint dmg;
         private readonly BehaviorSubject<uint> damage;
-        public uint CurrentDamage => this.dmg;
+        public uint CurrentDamage
+        {
+            get => this.dmg;
+            set
+            {
+                if (this.dmg != value)
+                {
+                    this.dmg = value;
+                    this.damage.OnNext(this.dmg);
+                }
+            }
+        }
 
         public ElementalInPlay(Elemental elemental, uint locationIndex, int index)
         {
@@ -27,11 +38,11 @@ namespace Riftforce
         public Elemental Elemental { get; set; }
         public IObservable<uint> Damage => this.damage;
 
-        public void ApplyDamage(uint damage)
-        {
-            this.dmg += damage;
-            this.damage.OnNext(this.dmg);
-        }
+        //public void ApplyDamage(uint damage)
+        //{
+        //    this.dmg += damage;
+        //    this.damage.OnNext(this.dmg);
+        //}
 
         public void ApplyHealing(uint healing)
         {
@@ -130,13 +141,33 @@ namespace Riftforce
             Debug.Assert(first == sides[side].Cards.FirstOrDefault());
             if (first is not null)
             {
-                first.ApplyDamage(damage);
+                this.ApplyDamageToSpecificIndex(side, 0, damage);
+            }
+        }
+
+        public void ApplyDamageToSpecificIndex(uint playerIndex, int elementalIndex, uint damage)
+        {
+            var target = this.Elementals[playerIndex][elementalIndex];
+            target.CurrentDamage += damage;
+
+            // check if the elemental has been destroyed
+            if (target.CurrentDamage >= target.Elemental.Strength)
+            {
+                this.Remove(target, playerIndex);
             }
         }
 
         public bool IsElementalPresent(uint elementalId)
         {
             return this.sides.Any(side => side.Contains(elementalId));
+        }
+
+        internal void ApplyDamageToAll(uint index, uint damage)
+        {
+            for (int i = 0; i < this.sides[index].Count; i++)
+            {
+                this.ApplyDamageToSpecificIndex(index, i, damage);
+            }
         }
     }
 }
