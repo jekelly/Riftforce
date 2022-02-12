@@ -5,6 +5,17 @@ using System.Reactive.Subjects;
 
 namespace Riftforce
 {
+
+    // Game is a stream of player inputs.
+    // Game state can be reconstructed by replaying those inputs on the same starting state.
+    // Certain operations are guaranteed and don't need to be represented as moves (i.e. changing active player).
+    // Player views of the game are scoped to what that player can know (so not opponents hand content).
+
+    // GameState itself is simple in-memory representation of current game state.
+    // GameEngine is the logic to apply moves to state to produce new state, based on the game rules.
+
+
+
     public class Game
     {
         public ElementalInPlay? FindElemental(uint id, uint side)
