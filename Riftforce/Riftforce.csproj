@@ -13,4 +13,8 @@
     <PackageReference Include="ReactiveUI.WPF" Version="17.1.17" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Page Include="App.xaml" />
+  </ItemGroup>
+
 </Project>
