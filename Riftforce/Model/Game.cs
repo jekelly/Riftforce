@@ -183,6 +183,7 @@ namespace Riftforce
             {
                 return false;
             }
+            Log.WriteLine($"{move.PlayerIndex} plays {move.ElementalId}");
 
             this.Phase = Phase.Deploy;
 

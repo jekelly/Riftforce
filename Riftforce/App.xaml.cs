@@ -19,6 +19,7 @@ namespace Riftforce
         {
             Locator.CurrentMutable.Register(() => new LocationView(), typeof(IViewFor<LocationViewModel>));
             Locator.CurrentMutable.Register(() => new ElementalView(), typeof(IViewFor<ElementalViewModel>));
+            Locator.CurrentMutable.Register(() => new DebugView(), typeof(IViewFor<DebugViewModel>));
         }
     }
 }

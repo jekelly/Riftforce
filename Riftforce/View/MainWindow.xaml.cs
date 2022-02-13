@@ -30,6 +30,8 @@ namespace Riftforce
             this.BindCommand(this.ViewModel, vm => vm.DiscardCommand, v => v.Discard, vm => vm.SelectedElemental);
 
             this.WhenAnyValue(x => x.Hand.SelectedValue).Subscribe(x => Debug.WriteLine($"{x} is new selected hand item"));
+
+            (new DebugView()).Show();
         }
 
         public GameViewModel? ViewModel
