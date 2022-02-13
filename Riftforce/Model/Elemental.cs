@@ -6,7 +6,8 @@ namespace Riftforce
 {
     public class Elemental
     {
-        private static uint NextId;
+        private static uint NextId = 0;
+        public const uint NoneId = 0;
         private static Dictionary<uint, Elemental> map = new Dictionary<uint, Elemental>();
 
         public uint Id { get; private set; }

@@ -45,7 +45,7 @@ namespace Riftforce
                 player2.DrawToHand();
             }
 
-            var game = new Game(new[] { player1, player2 });
+            var game = new Game(new GameState(new[] { player1, player2 }));
 
             // rudimentary AI
             game.UpdateState
