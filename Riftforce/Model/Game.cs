@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Subjects;
+using DynamicData;
 
 namespace Riftforce
 {
@@ -24,16 +25,22 @@ namespace Riftforce
         public Phase Phase { get; set; } = Phase.Main;
         public int ActivePlayerIndex { get; set; }
 
-        public Player[] Players { get; }
+        public ElementalDeck[] Decks { get; }
+        public List<Elemental>[] Hands { get; } = new List<Elemental>[2];
         public Location[] Locations { get; } = new Location[5];
 
         public List<uint> UsedElementals { get; } = new List<uint>(3);
         public List<uint> UsedLocations { get; } = new List<uint>(3);
         public uint Discard { get; set; } = Elemental.NoneId;
 
-        public GameState(Player[] players)
+        public GameState(IEnumerable<Elemental>[] decks)
         {
-            this.Players = players;
+            this.Decks = decks.Select(l => new ElementalDeck(l)).ToArray();
+            this.Hands[0] = new List<Elemental>();
+            this.Hands[1] = new List<Elemental>();
+            this.Decks[0].Shuffle();
+            this.Decks[1].Shuffle();
+
             for (uint i = 0; i < 5; i++)
             {
                 this.Locations[i] = new Location(i);
@@ -69,16 +76,18 @@ namespace Riftforce
         private BehaviorSubject<int> turn;
         public IObservable<int> Turn => this.turn;
 
-        public Player[] Players => this.state.Players;
+        //public Player[] Players => this.state.Players;
+        public ElementalDeck[] Decks => this.state.Decks;
+        public List<Elemental>[] Hands => this.state.Hands;
         public Location[] Locations => this.state.Locations;
 
-        private int ActivePlayerIndex
+        public int ActivePlayerIndex
         {
             get => this.state.ActivePlayerIndex;
             set => this.state.ActivePlayerIndex = value;
         }
 
-        public Player ActivePlayer => this.Players[this.state.ActivePlayerIndex];
+        //public Player ActivePlayer => this.Players[this.state.ActivePlayerIndex];
 
         private readonly BehaviorSubject<Game> update;
         public IObservable<Game> UpdateState => this.update;
@@ -118,7 +127,7 @@ namespace Riftforce
         public bool CanPlay(DrawAndScore move)
         {
             if (this.Phase != Phase.Main) return false;
-            return this.Phase == Phase.Main && this.Players[move.PlayerIndex].Hand.Count < 7;
+            return this.Phase == Phase.Main && this.Hands[move.PlayerIndex].Count < 7;
         }
 
         public bool CanPlay(TargetElemental move)
@@ -142,7 +151,7 @@ namespace Riftforce
                 return false;
             }
 
-            if (!this.ActivePlayer.Hand.Lookup(move.ElementalId).HasValue)
+            if (this.Hands[move.PlayerIndex].SingleOrDefault(e => e.Id == move.ElementalId) is null)
             {
                 return false;
             }
@@ -188,7 +197,8 @@ namespace Riftforce
             this.Phase = Phase.Deploy;
 
             // remove from hand
-            var elemental = this.ActivePlayer.PullFromHand(move.ElementalId);
+            var elemental = this.Hands[this.ActivePlayerIndex].Single(e => e.Id == move.ElementalId);
+            this.Hands[this.ActivePlayerIndex].Remove(elemental);
             var eip = this.Locations[move.LocationIndex].Add(elemental, move.PlayerIndex);
 
             eip.Elemental.Guild.OnPlayed(this.Locations[move.LocationIndex], move.PlayerIndex);
@@ -236,9 +246,10 @@ namespace Riftforce
         public void ProcessMove(DiscardAction move)
         {
             this.Phase = Phase.Activate;
-            var elemental = this.ActivePlayer.PullFromHand(move.DiscardId);
+            var elemental = this.Hands[this.ActivePlayerIndex].Single(e => e.Id == move.DiscardId);
+            this.Hands[this.ActivePlayerIndex].Remove(elemental);
             this.Discard = move.DiscardId;
-            this.ActivePlayer.Discard(elemental);
+            this.Decks[this.ActivePlayerIndex].Discard(elemental);
             this.UsedElementals.Add(this.Discard);
             this.minorUpdate.OnNext(this);
         }
@@ -271,7 +282,6 @@ namespace Riftforce
             // can't use the same elemental twice on a turn
             if (this.UsedElementals.Contains(move.ElementalId)) return false;
             // must match type or power of discarded card
-            var elemental = this.Players[move.PlayerIndex].Hand.Lookup(move.ElementalId);
             if (!this.MatchesStrengthOrGuild(move.PlayerIndex, move.ElementalId)) return false;
             // must be legal elemental, played on the board
             if (!this.Locations.Any(l => l.IsElementalPresent(move.ElementalId))) return false;
@@ -312,11 +322,10 @@ namespace Riftforce
 
         public bool ProcessMove(DrawAndScore move)
         {
-            var player = this.Players[move.PlayerIndex];
             const int HandSize = 7;
-            while (player.Hand.Count < HandSize)
+            while (this.Hands[move.PlayerIndex].Count < HandSize)
             {
-                this.Players[move.PlayerIndex].DrawToHand();
+                this.Draw(move.PlayerIndex);
             }
 
             int other = 1 - move.PlayerIndex;
@@ -333,11 +342,17 @@ namespace Riftforce
             return true;
         }
 
+        private void Draw(int playerIndex)
+        {
+            this.Hands[playerIndex].Add(this.Decks[playerIndex].Draw());
+        }
+
         private void SwitchActivePlayer()
         {
             this.Phase = Phase.Main;
             this.ActivePlayerIndex = 1 - this.ActivePlayerIndex;
             this.turn.OnNext(++this.turnCounter);
+            this.minorUpdate.OnNext(this);
             this.update.OnNext(this);
         }
     }

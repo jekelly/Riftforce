@@ -3,6 +3,13 @@ using System.Collections.Generic;
 
 namespace Riftforce
 {
+    public class ElementalDeck : Deck<Elemental>
+    {
+        public ElementalDeck(IEnumerable<Elemental> cards) : base(cards)
+        {
+        }
+    }
+
     public class Deck<T>
     {
         private static readonly Random r = new Random();
@@ -35,7 +42,7 @@ namespace Riftforce
             }
         }
 
-        public void Disard(T element)
+        public void Discard(T element)
         {
             this.discard.Push(element);
         }

@@ -40,8 +40,10 @@ namespace Riftforce
             this.playerOneScore = game.UpdateState.Select(g => g.Scores[0]).ToProperty(this, nameof(PlayerOneScore));
             this.playerTwoScore = game.UpdateState.Select(g => g.Scores[1]).ToProperty(this, nameof(PlayerTwoScore));
 
-            game.Players[0].Hand
-                .Connect()
+            var hand = game.MinorUpdate
+                .Select(g => g.Hands[0])
+                .ToObservableChangeSet(h => h.Id);
+            hand
                 .ObserveOn(RxApp.MainThreadScheduler)
                 .Bind(out this.hand)
                 .Subscribe();
@@ -64,7 +66,8 @@ namespace Riftforce
                 game.EndTurn();
             });
 
-            var handSizeChanged = game.ActivePlayer.Hand.CountChanged.Select(x => game.CanPlay(new DrawAndScore() { PlayerIndex = 0 }));
+            var handSizeChanged = game.MinorUpdate.Select(s => s.Hands[0].Count).DistinctUntilChanged().Select(x => game.CanPlay(new DrawAndScore() { PlayerIndex = 0 }));
+            //var handSizeChanged = game.Hands[game.ActivePlayerIndex].CountChanged.Select(x => game.CanPlay(new DrawAndScore() { PlayerIndex = 0 }));
             var moveTypeChanged = game.MinorUpdate.Select(x => game.CanPlay(new DrawAndScore() { PlayerIndex = 0 }));
             var canCheckAndDraw = Observable.Merge(handSizeChanged, moveTypeChanged);
 

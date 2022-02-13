@@ -36,20 +36,17 @@ namespace Riftforce
                 guilds[i] = selectedGuild;
             }
 
-            var player1 = new Player(decks[0]);
-            var player2 = new Player(decks[1]);
+            var game = new Game(new GameState(decks));
 
             for (int i = 0; i < 7; i++)
             {
-                player1.DrawToHand();
-                player2.DrawToHand();
+                game.Hands[0].Add(game.Decks[0].Draw());
+                game.Hands[1].Add(game.Decks[1].Draw());
             }
-
-            var game = new Game(new GameState(new[] { player1, player2 }));
 
             // rudimentary AI
             game.UpdateState
-                .Where(x => x.ActivePlayer == player2)
+                .Where(x => x.ActivePlayerIndex == 1)
                 .Subscribe(g =>
                 {
                     g.ProcessMove(new DrawAndScore() { PlayerIndex = 1 });
@@ -57,7 +54,7 @@ namespace Riftforce
                     
 
 
-            game.Locations[2].Add(player2.Draw(), 1);
+            game.Locations[2].Add(game.Decks[1].Draw(), 1);
 
             return game;
         }
