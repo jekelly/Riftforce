@@ -31,7 +31,15 @@ namespace Riftforce
 
             this.WhenAnyValue(x => x.Hand.SelectedValue).Subscribe(x => Debug.WriteLine($"{x} is new selected hand item"));
 
-            (new DebugView()).Show();
+            var dbgView = new DebugView();
+            this.Loaded += (o, e) =>
+            {
+                dbgView.WindowStartupLocation = WindowStartupLocation.Manual;
+                dbgView.Left = this.Left + this.Width;
+                dbgView.Top = this.Top;
+                dbgView.Owner = this;
+                dbgView.Show();
+            };
         }
 
         public GameViewModel? ViewModel
