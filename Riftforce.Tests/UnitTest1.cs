@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Newtonsoft.Json;
 using Xunit;
 
 namespace Riftforce.Tests
@@ -18,6 +19,17 @@ namespace Riftforce.Tests
             var y = target.Play(elemental3);
             target.Remove(x);
             y.Index.Should().Be(1);
+        }
+
+        [Fact]
+        public void RoundTripGame()
+        {
+            GameBuilder gb = new GameBuilder();
+            var game = gb.Build();
+            var state = game.State;
+
+            var serializedGame = JsonConvert.SerializeObject(state);
+            var g = JsonConvert.DeserializeObject<GameState>(serializedGame);
         }
     }
 }

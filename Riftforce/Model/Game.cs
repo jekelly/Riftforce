@@ -51,7 +51,7 @@ namespace Riftforce
 
     public class Game
     {
-        private readonly GameState state;
+        private GameState state;
 
         private uint Discard
         {
@@ -91,6 +91,12 @@ namespace Riftforce
 
         private readonly BehaviorSubject<Game> update;
         public IObservable<Game> UpdateState => this.update;
+
+        public GameState State
+        {
+            get => this.state;
+            set => this.state = value;
+        }
 
         private readonly BehaviorSubject<Game> minorUpdate;
         public IObservable<Game> MinorUpdate => this.minorUpdate;
