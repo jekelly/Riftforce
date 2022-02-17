@@ -36,6 +36,8 @@ namespace Riftforce
         public virtual Phase Target(Game game, TargetLocation move) => Phase.Activate;
         public virtual Phase Target(Game game, TargetElemental move) => Phase.Activate;
 
+        public Phase Activate(Location location, uint elementalId, uint playerIndex) => this.Activate(location, Elemental.Lookup(elementalId), playerIndex);
+
         public virtual Phase Activate(Location location, Elemental elemental, uint playerIndex)
         {
             location.ApplyDamageToFront(playerIndex, 2);

@@ -17,10 +17,13 @@ namespace Riftforce
 
         public ElementalViewModel(ElementalInPlay model, Game game, uint side)
         {
-            this.Strength = model.Elemental.Strength;
-            this.GuildName = model.Elemental.Guild.Name;
+            this.Strength = model.Strength;
+            this.GuildName = model.Guild.Name;
 
-            this.damage = model.Damage.ToProperty(this, nameof(DamageTaken));
+            this.damage = game.MinorUpdate
+                .Select(g => g.Locations[model.Location].Elementals[side][model.Index].CurrentDamage)
+                .DistinctUntilChanged()
+                .ToProperty(this, nameof(DamageTaken));
 
             var activateMove = new ActivateElemental() { PlayerIndex = 0, ElementalId = model.Id };
             var activate = () => { game.ProcessMove(activateMove); };

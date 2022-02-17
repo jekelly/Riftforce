@@ -1,4 +1,5 @@
-﻿using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 
@@ -6,36 +7,40 @@ namespace Riftforce
 {
     public class Location
     {
-        private readonly LocationSide[] sides;
-        private readonly ReadOnlyObservableCollection<ElementalInPlay>[] eList;
-        public ReadOnlyObservableCollection<ElementalInPlay>[] Elementals => this.eList;
+        private readonly IReadOnlyList<ElementalInPlay>[] elementals;
+        private readonly List<ElementalInPlay>[] sides;
+        public IReadOnlyList<ElementalInPlay>[] Elementals => this.elementals;
 
         public uint Index { get; }
 
         public Location(uint index)
         {
             this.Index = index;
-            this.sides = new LocationSide[2];
-            this.sides[0] = new LocationSide(index);
-            this.sides[1] = new LocationSide(index);
-            this.eList = new ReadOnlyObservableCollection<ElementalInPlay>[2];
-            this.eList[0] = this.sides[0].Cards;
-            this.eList[1] = this.sides[1].Cards;
+            this.sides = new List<ElementalInPlay>[2];
+            this.sides[0] = new List<ElementalInPlay>();
+            this.sides[1] = new List<ElementalInPlay>();
+            this.elementals = this.sides.Select(s => s.AsReadOnly()).ToArray();
         }
 
         public ElementalInPlay Add(Elemental elemental, uint side)
         {
-            return this.sides[side].Play(elemental);
+            var eip = new ElementalInPlay(elemental, this.Index, this.sides[side].Count);
+            this.sides[side].Add(eip);
+            return eip;
         }
 
         public void Remove(ElementalInPlay elemental, uint side) => this.sides[side].Remove(elemental);
-        public void Move(ElementalInPlay elemental, uint side) => this.sides[side].Move(elemental);
+        public void Move(ElementalInPlay elemental, uint side)
+        {
+            elemental.Location = this.Index;
+            elemental.Index = this.sides[side].Count;
+            this.sides[side].Add(elemental);
+        }
 
         public void ApplyDamageToFront(uint sourceSide, uint damage)
         {
             uint side = 1 - sourceSide;
-            var first = sides[side].Cards.Where(c => c.Index == 0).SingleOrDefault();
-            Debug.Assert(first == sides[side].Cards.FirstOrDefault());
+            var first = sides[side].FirstOrDefault();
             if (first is not null)
             {
                 this.ApplyDamageToSpecificIndex(side, 0, damage);
@@ -48,7 +53,7 @@ namespace Riftforce
             target.CurrentDamage += damage;
 
             // check if the elemental has been destroyed
-            if (target.CurrentDamage >= target.Elemental.Strength)
+            if (target.CurrentDamage >= target.Strength)
             {
                 this.Remove(target, playerIndex);
             }
@@ -56,7 +61,7 @@ namespace Riftforce
 
         public bool IsElementalPresent(uint elementalId)
         {
-            return this.sides.Any(side => side.Contains(elementalId));
+            return this.sides.Any(side => side.Select(eip => eip.Id).Contains(elementalId));
         }
 
         internal void ApplyDamageToAll(uint index, uint damage)

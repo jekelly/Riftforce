@@ -24,13 +24,6 @@ namespace Riftforce
                 .Subscribe();
         }
 
-        public ElementalInPlay Play(Elemental elemental)
-        {
-            var eip = new ElementalInPlay(elemental, index, this.Count);
-            this.cache.AddOrUpdate(eip);
-            return eip;
-        }
-
         public void Move(ElementalInPlay elemental)
         {
             elemental.Location = this.index;

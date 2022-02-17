@@ -21,13 +21,15 @@ namespace Riftforce
 
         public LocationViewModel(Location location, GameViewModel game, Game game1)
         {
-            location.Elementals[0]
-                .ToObservableChangeSet()
+            game1.MinorUpdate
+                .Select(g => g.Locations[location.Index].Elementals[0])
+                .ToObservableChangeSet(x => new { x.Id, x.Index })
                 .Transform(x => new ElementalViewModel(x, game1, 0))
                 .Bind(out this.elementalOne)
                 .Subscribe();
-            location.Elementals[1]
-                .ToObservableChangeSet()
+            game1.MinorUpdate
+                .Select(g => g.Locations[location.Index].Elementals[1])
+                .ToObservableChangeSet(x => new { x.Id, x.Index })
                 .Transform(x => new ElementalViewModel(x, game1, 1))
                 .Bind(out this.elementalTwo)
                 .Subscribe();

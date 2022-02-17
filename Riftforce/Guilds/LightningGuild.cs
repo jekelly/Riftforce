@@ -16,7 +16,7 @@
         public override Phase Target(Game game, TargetElemental move)
         {
             var elemental = game.FindElemental(move.ElementalId, move.PlayerIndex);
-            bool willKillTarget = (elemental.Elemental.Strength - elemental.CurrentDamage - 2) >= 0;
+            bool willKillTarget = (elemental.Strength - elemental.CurrentDamage - 2) >= 0;
             game.Locations[elemental.Location].ApplyDamageToSpecificIndex(move.PlayerIndex, elemental.Index, 2);
             if (willKillTarget && !game.HasUsedLightningThisTurn)
             {

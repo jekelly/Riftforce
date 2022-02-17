@@ -11,17 +11,6 @@ namespace Riftforce.Tests
         private Elemental elemental3 = new Elemental(7, Guild.Shadow);
 
         [Fact]
-        public void Test1()
-        {
-            LocationSide target = new LocationSide(0);
-            target.Play(elemental1);
-            var x = target.Play(elemental2);
-            var y = target.Play(elemental3);
-            target.Remove(x);
-            y.Index.Should().Be(1);
-        }
-
-        [Fact]
         public void RoundTripGame()
         {
             GameBuilder gb = new GameBuilder();

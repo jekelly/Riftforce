@@ -1,55 +1,59 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 
 namespace Riftforce
 {
-    public class ElementalDeck : Deck<Elemental>
-    {
-        public ElementalDeck(IEnumerable<Elemental> cards) : base(cards)
-        {
-        }
-    }
-
-    public class Deck<T>
+    [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
+    public class Deck
     {
         private static readonly Random r = new Random();
-        private readonly IReadOnlyList<T> deck;
-        private readonly Queue<T> draw;
-        private readonly Stack<T> discard;
 
-        public Deck(IEnumerable<T> cards)
+        [JsonProperty]
+        private readonly Queue<uint> draw;
+
+        [JsonProperty]
+
+        private readonly Stack<uint> discard;
+
+        public Deck(IEnumerable<uint> cards)
         {
-            this.deck = new List<T>(cards).AsReadOnly();
-            this.discard = new Stack<T>();
-            this.draw = new Queue<T>();
+            this.discard = new Stack<uint>();
+            this.draw = new Queue<uint>(cards ?? Enumerable.Empty<uint>());
+            this.Shuffle();
         }
 
         public void Shuffle()
         {
-            var shuffledDeck = new List<T>(this.deck);
-            for (int i = this.deck.Count - 1; i > 0; i--)
+            var items = this.discard.Concat(this.draw).ToList();
+            this.discard.Clear();
+            this.draw.Clear();
+            var shuffledDeck = new List<uint>(items);
+            for (int i = items.Count - 1; i > 0; i--)
             {
                 int index = r.Next(i);
-                T value = shuffledDeck[index];
+                uint value = shuffledDeck[index];
                 shuffledDeck[index] = shuffledDeck[i];
                 shuffledDeck[i] = value;
             }
-
-            this.draw.Clear();
             for (int i = 0; i < shuffledDeck.Count; i++)
             {
                 this.draw.Enqueue(shuffledDeck[i]);
             }
         }
 
-        public void Discard(T element)
+        public void Discard(Elemental elemental)
         {
-            this.discard.Push(element);
+            this.discard.Push(elemental.Id);
         }
 
-        public T Draw()
+        public Elemental Draw()
         {
-            return this.draw.Dequeue();
+            return Elemental.Lookup(this.draw.Dequeue());
         }
     }
 }

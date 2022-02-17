@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reactive.Subjects;
 using DynamicData;
+using Newtonsoft.Json;
 
 namespace Riftforce
 {
@@ -25,7 +26,7 @@ namespace Riftforce
         public Phase Phase { get; set; } = Phase.Main;
         public int ActivePlayerIndex { get; set; }
 
-        public ElementalDeck[] Decks { get; }
+        public Deck[] Decks { get; }
         public List<Elemental>[] Hands { get; } = new List<Elemental>[2];
         public Location[] Locations { get; } = new Location[5];
 
@@ -33,9 +34,10 @@ namespace Riftforce
         public List<uint> UsedLocations { get; } = new List<uint>(3);
         public uint Discard { get; set; } = Elemental.NoneId;
 
-        public GameState(IEnumerable<Elemental>[] decks)
+        [JsonConstructor]
+        public GameState(Deck[] decks)
         {
-            this.Decks = decks.Select(l => new ElementalDeck(l)).ToArray();
+            this.Decks = decks;
             this.Hands[0] = new List<Elemental>();
             this.Hands[1] = new List<Elemental>();
             this.Decks[0].Shuffle();
@@ -45,6 +47,10 @@ namespace Riftforce
             {
                 this.Locations[i] = new Location(i);
             }
+        }
+
+        public GameState(IEnumerable<Elemental>[] decks) : this(decks.Select(l => new Deck(l.Select(x => x.Id))).ToArray())
+        {
         }
     }
 
@@ -77,7 +83,7 @@ namespace Riftforce
         public IObservable<int> Turn => this.turn;
 
         //public Player[] Players => this.state.Players;
-        public ElementalDeck[] Decks => this.state.Decks;
+        public Deck[] Decks => this.state.Decks;
         public List<Elemental>[] Hands => this.state.Hands;
         public Location[] Locations => this.state.Locations;
 
@@ -207,7 +213,7 @@ namespace Riftforce
             this.Hands[this.ActivePlayerIndex].Remove(elemental);
             var eip = this.Locations[move.LocationIndex].Add(elemental, move.PlayerIndex);
 
-            eip.Elemental.Guild.OnPlayed(this.Locations[move.LocationIndex], move.PlayerIndex);
+            eip.Guild.OnPlayed(this.Locations[move.LocationIndex], move.PlayerIndex);
 
             this.PlayedLocations.Add(move.LocationIndex);
             this.UsedElementals.Add(elemental.Id);
@@ -309,7 +315,7 @@ namespace Riftforce
                 var elemental = location.Elementals[move.PlayerIndex].SingleOrDefault(e => e.Id == move.ElementalId);
                 if (elemental is not null)
                 {
-                    this.Phase = elemental.Elemental.Guild.Activate(location, elemental.Elemental, move.PlayerIndex);
+                    this.Phase = elemental.Guild.Activate(location, elemental.Id, move.PlayerIndex);
                     this.UsedElementals.Add(elemental.Id);
                     this.ActiveElemental = elemental;
                     break;
