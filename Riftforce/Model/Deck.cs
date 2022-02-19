@@ -8,6 +8,18 @@ using Newtonsoft.Json.Serialization;
 
 namespace Riftforce
 {
+    public class PublicDeckInfo
+    {
+        public int RemainingCards { get; set; }
+        public int Discards { get; set; }
+
+        public PublicDeckInfo(Deck deck)
+        {
+            this.RemainingCards = deck.Remaining;
+            this.Discards = deck.Discarded;
+        }
+    }
+
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public class Deck
     {
@@ -19,6 +31,9 @@ namespace Riftforce
         [JsonProperty]
 
         private readonly Stack<uint> discard;
+
+        public int Remaining => this.draw.Count;
+        public int Discarded => this.discard.Count;
 
         public Deck(IEnumerable<uint> cards)
         {

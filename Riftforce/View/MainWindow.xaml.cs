@@ -16,7 +16,13 @@ namespace Riftforce
         {
             InitializeComponent();
 
-            var game = new GameBuilder().Build();
+            var gameService = new Games();
+            var gameId = gameService.CreateGame();
+            var playerId = gameId.Players[0];
+
+            var game = new Game(gameId.State);
+            GameBuilder.Initialize(game);
+
             this.ViewModel = new GameViewModel(game);
             this.OneWayBind(this.ViewModel, vm => vm.Turn, v => v.TurnText.Text, v => $"Turn: {v}");
             this.OneWayBind(this.ViewModel, vm => vm.PlayerOneScore, v => v.PlayerOneScore.Text, v => $"Mine: {v} points");

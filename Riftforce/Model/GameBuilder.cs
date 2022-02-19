@@ -7,7 +7,7 @@ namespace Riftforce
 {
     public class GameBuilder
     {
-        public Game Build()
+        public GameState BuildState()
         {
             // TODO: eventually, draft guilds, for now, random it
             var guilds = new List<Guild>(Guild.Guilds);
@@ -36,8 +36,11 @@ namespace Riftforce
                 guilds[i] = selectedGuild;
             }
 
-            var game = new Game(new GameState(decks));
+            return new GameState(decks);
+        }
 
+        public static void Initialize(Game game)
+        {
             for (int i = 0; i < 7; i++)
             {
                 game.Hands[0].Add(game.Decks[0].Draw());
@@ -51,10 +54,16 @@ namespace Riftforce
                 {
                     g.ProcessMove(new DrawAndScore() { PlayerIndex = 1 });
                 });
-                    
-
 
             game.Locations[2].Add(game.Decks[1].Draw(), 1);
+
+        }
+
+        public Game Build()
+        {
+            var game = new Game(this.BuildState());
+
+            Initialize(game);
 
             return game;
         }
